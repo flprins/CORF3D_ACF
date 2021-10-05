@@ -1,12 +1,13 @@
 import matlab.engine
 import numpy as np
 import os
+from sklearn import preprocessing
 
 m = matlab.engine.start_matlab()
 m.addpath('.\CORFpushpull', nargout=0)
 
 
-def corf_feature_maps(dataset, sigma, beta, inhibitionFactor, highthresh ):
+def corf_feature_maps(dataset, sigma, beta, inhibitionFactor, highthresh):
 
     """
 
@@ -21,7 +22,7 @@ def corf_feature_maps(dataset, sigma, beta, inhibitionFactor, highthresh ):
                              excitatory receptive field
     :param highthresh: The high threshold of the non-maximum suppression used for binarization
 
-    :return: Lists of the response map of the rotation-invariant CORF operator (CORF feature maps) in an array form
+    :return: List of the response map of the rotation-invariant CORF operator (CORF feature maps) in an array form
 
     """
 
@@ -33,9 +34,54 @@ def corf_feature_maps(dataset, sigma, beta, inhibitionFactor, highthresh ):
         for image in img_list:
             retrieve_dir = dataset + "/" + folder_name + "/" + image
             images = m.imread(retrieve_dir)
-            binarymap, corfresponse = m.CORFContourDetection(images, sigma, beta, inhibitionFactor, highthresh, nargout=2)
+            binarymap, corfresponse = m.CORFContourDetection(images, sigma, beta, inhibitionFactor,
+                                                             highthresh, nargout=2)
             list_of_image_paths.append(corfresponse)
 
     return np.array(list_of_image_paths)
 
 
+def normalization(feature_maps):
+
+    """
+
+    Function to return an list of scaled feature maps
+
+    :param feature_maps: List of feature maps
+
+    :return: List of scaled feature maps in an array form
+
+    """
+
+    list_scaled_feature_maps = []
+
+    for i in range(0, len(feature_maps)):
+        min_max_scaler = preprocessing.MinMaxScaler()
+        scaled_feature_maps = min_max_scaler.fit_transform(feature_maps[i])
+        list_scaled_feature_maps.append(scaled_feature_maps)
+
+    return np.array(list_scaled_feature_maps)
+
+
+def concatenate(feature_maps_one, feature_map_two, feature_map_three):
+
+    """
+
+    Function to return an list of concatenated feature maps
+
+    :param feature_maps_one: List of feature maps of first channel
+    :param feature_map_two: List of feature maps of second channel
+    :param feature_map_three: List of feature maps of thrid channel
+
+    :return: List of concatenate feature maps in an array form
+
+    """
+
+    list_concatenate = []
+
+    for i in range(0, len(feature_maps_one)):
+        concatenate = np.stack([feature_maps_one[i], feature_map_two[i], feature_map_three[i]],
+                           axis=-1)
+        list_concatenate.append(concatenate)
+
+    return np.array(list_concatenate)
