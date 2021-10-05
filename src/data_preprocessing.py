@@ -8,7 +8,7 @@ m.addpath('.\CORFpushpull', nargout=0)
 
 
 def corf_feature_maps(dataset, sigma, beta, inhibitionFactor, highthresh):
-
+    
     """
 
     Function to return an list of CORF feature maps
@@ -80,8 +80,9 @@ def concatenate(feature_maps_one, feature_map_two, feature_map_three):
     list_concatenate = []
 
     for i in range(0, len(feature_maps_one)):
-        concatenate = np.stack([feature_maps_one[i], feature_map_two[i], feature_map_three[i]],
-                           axis=-1)
-        list_concatenate.append(concatenate)
+        concatenate_features = np.stack([feature_maps_one[i], feature_map_two[i],
+                                         feature_map_three[i]],
+                                        axis=-1)
+        list_concatenate.append(concatenate_features)
 
     return np.array(list_concatenate)
