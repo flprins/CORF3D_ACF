@@ -1,4 +1,4 @@
-function [RGB, im4] = segmentation(t, R)
+function [RGB, mask] = segmentation(t, R)
 % Convert to gray scale
 T = rgb2gray(t);
 
@@ -72,4 +72,4 @@ RGB = imcrop(RGB, BB.BoundingBox);
 % RGB = imresize(RGB, [224 224]);
 im4 = im2uint8(im3);
 
-im4 = imcrop(~im4, BB.BoundingBox);
+mask = imcrop(~im4, BB.BoundingBox);
