@@ -1,4 +1,4 @@
-function [RGB, mask] = segmentation(t, R)
+function [RGB, im4] = segmentation(t, R)
 % Convert to gray scale
 T = rgb2gray(t);
 
@@ -36,7 +36,7 @@ fuse = imoverlay(R,~imbinarize(B), 'black');
 % Obtain mask 320*240
 fuse1 = imoverlay(T,~imbinarize(B));
 % figure,imshow(fuse1);
-fuse2 = rgb2gray(fuse1);  
+fuse2 = rgb2gray(fuse1);
 
 % Thresholding 320*240 on only cow
 [r2,c2] = size(fuse2);
@@ -50,7 +50,7 @@ im1 = zeros(r2,c2);
          end
      end
  end
- 
+
 % figure,imshow(im1);
 im2 = imbinarize(im1);
 % figure,imshow(im2);
@@ -72,4 +72,4 @@ RGB = imcrop(RGB, BB.BoundingBox);
 % RGB = imresize(RGB, [224 224]);
 im4 = im2uint8(im3);
 
-mask = imcrop(~im4, BB.BoundingBox);
+im4 = imcrop(~im4, BB.BoundingBox);

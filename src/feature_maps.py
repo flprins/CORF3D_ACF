@@ -4,7 +4,7 @@ import os
 from sklearn import preprocessing
 
 m = matlab.engine.start_matlab()
-m.addpath('.\CORFpushpull', nargout=0)
+m.addpath('.\src\CORFpushpull', nargout=0)
 
 
 def corf_feature_maps(dataset, sigma, beta, inhibitionFactor, highthresh):
