@@ -13,3 +13,6 @@ if __name__ == '__main__':
         else:
             raise argparse.ArgumentTypeError('Boolean value expected.')
 
+
+    check = batch_data_preprocessing("D:\Amey\Masters\Projects\CORF3D_HCR\data\interim\Pre-segmentation")
+

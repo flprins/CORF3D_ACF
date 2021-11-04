@@ -1,9 +1,7 @@
 import matlab.engine
 import numpy as np
 import os
-import src.preprocessing
-from matplotlib.pyplot import imshow
-from sklearn import preprocessing
+import matplotlib.pyplot as plt
 import cv2
 #
 m = matlab.engine.start_matlab()
@@ -26,22 +24,21 @@ def batch_data_preprocessing(dataset):
     data_dir_list = os.listdir(dataset)
     for folder_name in data_dir_list:
         img_list = os.listdir(dataset + '/' + folder_name)
-        # img_list_range = range(1, len(img_list), 2)
-        for image in img_list:
-            thermal_image_path = dataset + "/" + folder_name + "/" + image
-            # print(type(thermal_image_path))
-            rgb_image_path = dataset + "/" + folder_name + "/" + image
+        for idx in range(0, len(img_list), 2):
+            rgb_image_idx = img_list[idx]
+            rgb_image_path = dataset + "/" + folder_name + "/" + rgb_image_idx
+            thermal_image_idx = img_list[idx + 1]
+            thermal_image_path = dataset + "/" + folder_name + "/" + thermal_image_idx
             thermal_image = m.imread(thermal_image_path)
             rgb_image = m.imread(rgb_image_path)
-            print(rgb_image_path)
-            print(thermal_image_path)
             RGB, mask = m.segmentation(thermal_image, rgb_image, nargout=2)
             RGB = np.array(RGB)
             RGB = RGB.astype('uint8')
             mask = np.array(mask)
             mask = mask.astype('uint8')
             inpainted_image = cv2.inpaint(RGB, mask, 3, cv2.INPAINT_TELEA)
-            imshow(inpainted_image)
+            plt.imshow(inpainted_image)
+            plt.show()
             list_of_inpainted_images.append(inpainted_image)
 
     return np.array(list_of_inpainted_images)
