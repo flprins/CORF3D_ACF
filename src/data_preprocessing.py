@@ -13,7 +13,8 @@ def batch_data_preprocessing(dataset):
 
     Function to return an list of inpainted images
 
-    :param dataset: Folder with class name and all the pre-segmentation images
+    :param dataset: Folder with class name and all the pre-segmentation images containing RGB
+    and themral images
 
     :return: list of inpainted images in an array form
 
@@ -37,8 +38,6 @@ def batch_data_preprocessing(dataset):
             mask = np.array(mask)
             mask = mask.astype('uint8')
             inpainted_image = cv2.inpaint(RGB, mask, 3, cv2.INPAINT_TELEA)
-            plt.imshow(inpainted_image)
-            plt.show()
             list_of_inpainted_images.append(inpainted_image)
 
     return np.array(list_of_inpainted_images)
