@@ -5,6 +5,7 @@ from keras.engine import Model
 from keras.applications.densenet import DenseNet121
 from keras.applications.mobilenet import MobileNet
 from keras.applications.xception import Xception
+from sklearn import svm
 
 class Models(object):
 
@@ -35,7 +36,7 @@ class Models(object):
         self.num_classes = num_classes
         self.weights = weights
         self.include_top = include_top
-        self.learning_rate_value = learning_rate
+        self.learning_rate = learning_rate
 
         self.model_out = None
 
@@ -86,6 +87,18 @@ class Models(object):
                     use_bias=True)(x.output)
 
         self.model_out = Model(inputs=base_model.input, outputs=out)
+
+    def svm(self):
+
+        """
+
+             Function to return SVM model
+
+        """
+
+        svm_model = svm.SVC(kernel='linear')
+
+        return svm_model
 
     def model_trainable(self):
 
