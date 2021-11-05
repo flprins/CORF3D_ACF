@@ -35,7 +35,7 @@ function [binarymap, corfresponse] = CORFContourDetection(img,sigma, beta, inhib
 
 %%%%%%%%%%%%%%%% BEGIN CONFIGURATION %%%%%%%%%%%%%%%%%%
 % Add Utilities folder to path
-addpath('./CORFpushpull/Utilities/');
+addpath('.\src\CORFpushpull\Utilities\');
 
 if ndims(img) == 3
     img = rgb2gray(img);

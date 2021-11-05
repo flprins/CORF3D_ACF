@@ -1,7 +1,6 @@
 import matlab.engine
 import numpy as np
 import os
-import matplotlib.pyplot as plt
 import cv2
 #
 m = matlab.engine.start_matlab()
@@ -38,6 +37,7 @@ def batch_data_preprocessing(dataset):
             mask = np.array(mask)
             mask = mask.astype('uint8')
             inpainted_image = cv2.inpaint(RGB, mask, 3, cv2.INPAINT_TELEA)
+            inpainted_image = cv2.resize(inpainted_image, (224, 224))
             list_of_inpainted_images.append(inpainted_image)
 
     return np.array(list_of_inpainted_images)

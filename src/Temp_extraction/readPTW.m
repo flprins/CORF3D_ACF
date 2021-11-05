@@ -26,7 +26,7 @@ end
 
 if subfolders == 0
     files = dir([dataPath '/*.ptw']);                                       
-    frames  = zeros(256,320,length(files));
+    frames  = zeros(240,320,length(files));
     
     for index_file = 1:length(files)
         
@@ -73,7 +73,7 @@ elseif subfolders == 1
         end
     end
     
-    frames  = zeros(256,320,length(files));
+    frames  = zeros(240,320,length(files));
     
     for index_file = 1:length(files)
         

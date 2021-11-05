@@ -1,6 +1,6 @@
 % read FLIR jpeg files - OF
 
-filename = 'FLIR1938.jpg';
+filename = 'FLIR1905.jpg';
 v = FlirMovieReader(filename);  
 v.unit = 'temperatureFactory';    
 while ~isDone(v)                                                    

@@ -4,8 +4,6 @@ import os
 from sklearn import preprocessing
 
 m = matlab.engine.start_matlab()
-m.addpath('.\src\CORFpushpull', nargout=0)
-
 
 def corf_feature_maps(dataset, sigma, beta, inhibitionFactor, highthresh):
     
@@ -28,6 +26,8 @@ def corf_feature_maps(dataset, sigma, beta, inhibitionFactor, highthresh):
 
     list_of_image_paths = []
 
+    m.addpath('.\src\CORFpushpull', nargout=0)
+
     data_dir_list = os.listdir(dataset)
     for folder_name in data_dir_list:
         img_list = os.listdir(dataset + '/' + folder_name)
@@ -39,6 +39,34 @@ def corf_feature_maps(dataset, sigma, beta, inhibitionFactor, highthresh):
             list_of_image_paths.append(corfresponse)
 
     return np.array(list_of_image_paths)
+
+def temp_feature_maps(dataset):
+
+    """
+
+    Function to return an list of temperature feature maps
+
+    :param dataset: Folder with class name and all the thermal images
+
+    :return: List of the response map of the temperature in an array form
+
+    """
+
+    list_of_inpainted_temp_map = []
+
+    m.addpath('.\src\Temp_extraction', nargout=0)
+    m.addpath('.\src\preprocessing', nargout=0)
+
+    data_dir_list = os.listdir(dataset)
+    for folder_name in data_dir_list:
+        img_list = os.listdir(dataset + '/' + folder_name)
+        for image in img_list:
+            retrieve_dir = dataset + "/" + folder_name + "/" + image
+            temp_map = m.temp_segmentation(retrieve_dir)
+            temp_map = np.array(temp_map)
+            list_of_inpainted_temp_map.append(temp_map)
+
+    return np.array(list_of_inpainted_temp_map)
 
 
 def normalization(feature_maps):

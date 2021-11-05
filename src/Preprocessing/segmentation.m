@@ -20,22 +20,17 @@ im = imfill(im,'holes');
 
 % Close and extract maximum area 320*240
 BWsdil = imclose(imclose(im,strel('line',18,0)),strel('line',18,90));
-% figure, imshow(BWsdil);
 reg = regionprops(BWsdil);
 bw = bwlabel(BWsdil);
-% figure, imagesc(bw);
 [mx,mxind] = max([reg.Area]);
 B = double(bw == mxind);
 B(B == 0) = -1;
-% figure,imshow(B);
 
 % Segment complete RGB Cow 320*240
 fuse = imoverlay(R,~imbinarize(B), 'black');
-%figure,imshow(fuse);
 
 % Obtain mask 320*240
 fuse1 = imoverlay(T,~imbinarize(B));
-% figure,imshow(fuse1);
 fuse2 = rgb2gray(fuse1);
 
 % Thresholding 320*240 on only cow
@@ -51,21 +46,17 @@ im1 = zeros(r2,c2);
      end
  end
 
-% figure,imshow(im1);
 im2 = imbinarize(im1);
-% figure,imshow(im2);
 
 % Smoothen out the edges of mask 320*240
 windowSize = 9;
 kernel = ones(windowSize) / windowSize ^ 2;
 blurryImage = conv2(single(im2), kernel, 'same');
 im3 = blurryImage > 0.8; % Rethreshold
-%figure,imshow(~im3);
+
 
 % Scratched RGB Image 320*240
 RGB = imoverlay(fuse,~im3, 'white');
-% RGB = regionfill(rgb2gray(fuse),~im3);
-% figure, imshow(RGB);
 
 BB = regionprops(B);
 RGB = imcrop(RGB, BB.BoundingBox);
