@@ -71,7 +71,7 @@ Github link to the code for the above paper:
 └── main.py                    # script to run exepriments with different parameters settings
 ```
 
-## Running Expriments
+## Running Experiments
 
 ### Train 
 
