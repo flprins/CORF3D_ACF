@@ -80,7 +80,7 @@ Github link to the code for the above paper:
 
 ## Performance
 
-### Results1
+#### Average performance of three ConvNets and four feature sets across 5-fold cross-validation
 
 | __Model__ | __Feature set__ | __Test accuracy__ (\%) | __F1__ (\%) |
 |:--------------:|:--------------------:|:---------------------------:|:----------------:|
@@ -98,7 +98,7 @@ Github link to the code for the above paper:
 |                | CORF3D               | 98.86 ± 0.31            | 98.75 ± 0.35  |
 
 
-### Results2
+#### Average performance of different fusions of feature sets across 5-fold cross-validation
 
 | __Model__             | __Feature set__           | __Test accuracy__ (\%) | __F1__ (\%)}          |
 |:--------------------------:|:------------------------------:|:---------------------------:|:-------------------------:|
@@ -109,7 +109,7 @@ Github link to the code for the above paper:
 | Xception + SVM             | RGB + MSX                      | 98.1 ±  0.14            | 98.08 ± 0.18          |
 |                            | RGB + CORF3D                   | 99.29 ± 0.37            | 99.24 ± 0.33          |
 
-### Results3
+#### Average performance of different feature sets and models across a leave-one-day-out cross-validation
 
 | __Model__             | __Feature set__  | __Test accuracy__ (\%) | __F1__ (\%)          |
 |:--------------------------:|:---------------------:|:---------------------------:|:-------------------------:|
@@ -124,6 +124,8 @@ Github link to the code for the above paper:
 | Xception + SVM             | RGB + CORF3D          | 99.15 ± 0.35            | 99.21 ± 0.33          |
 
 ## Acknowledgment
+
+We thank the Dairy Campus in Leeuwarden for permitting the data collection used in this project and for approving its availability for academic use. We are also grateful for the discussions held with Prof. Michael Biehl from the University of Groningen who contributed in the designing stage of several aspects of the project. Finally, we thank the Center for Information Technology of the University of Groningen for their support and for providing access to the Peregrine high performance computing cluster.
 
 ## Citation
 
