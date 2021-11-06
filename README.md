@@ -58,15 +58,16 @@ Github link to the code for the above paper:
 ```
 .
 ├── src                        # source code of the project 
-|   ├── data_augmentation.py   # script for data augmentation
+|   ├── CORFpushpull           # source code for CORFpushpull model
+|   ├── Preprocessing          # scripts for segmentation
+|   ├── Temp_extraction        # source code for temperature extraction 
 |   ├── data_load.py           # script for data loading
-|   ├── evaluation.py          # script for model evaluation
+|   ├── data_preprocessing.py  # script for batch data preprocesing
+|   ├── evaluation.py          # script for model evaluation 
+|   ├── feature_maps.py        # script for feature map generation   
 |   ├── models.py              # script for compiling model
 |   ├── train.py               # script to train model
 |   └──visualizations.py       # script for visualization
-├── weights                    # weights of FaceNet model 
-|   ├── facenet_keras.h5             # model
-|   └── facenet_keras_weights.h5     # weights of model
 └── main.py                    # script to run exepriments with different parameters settings
 ```
 
