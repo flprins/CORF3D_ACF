@@ -20,6 +20,8 @@ def batch_data_preprocessing(dataset):
     """
 
     list_of_inpainted_images = []
+    labels = []
+    labels_list = []
 
     data_dir_list = os.listdir(dataset)
     for folder_name in data_dir_list:
@@ -39,5 +41,7 @@ def batch_data_preprocessing(dataset):
             inpainted_image = cv2.inpaint(RGB, mask, 3, cv2.INPAINT_TELEA)
             inpainted_image = cv2.resize(inpainted_image, (224, 224))
             list_of_inpainted_images.append(inpainted_image)
+        labels_list.append(folder_name)
+        labels.append([folder_name] * len(img_list))
 
-    return np.array(list_of_inpainted_images)
+    return np.array(list_of_inpainted_images), labels, labels_list

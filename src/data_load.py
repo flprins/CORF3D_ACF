@@ -35,6 +35,36 @@ def load_images(dataset, resize):
 
     return np.array(list_of_image_paths), labels, labels_list
 
+def load_feature_maps(dataset, resize):
+
+    """
+
+    Function to return an list of feautre maps and its labels
+
+    :param resize: resize the feature maps
+    :param dataset: Folder with class name and all the feature maps in the dataset
+    :return: Lists of feature maps in an array form
+
+    """
+
+    feature_data_list = []
+    labels = []
+    list_of_feature_paths = []
+    labels_list = []
+
+    data_dir_list = os.listdir(dataset)
+    for folder_name in data_dir_list:
+        feature_list = os.listdir(dataset + '/' + folder_name)
+        for feature_maps in feature_list:
+            retrieve_dir = dataset + "/" + folder_name + "/" + feature_maps
+            feature_maps = np.load(retrieve_dir)
+            images = cv2.resize(feature_maps, (resize, resize))
+            list_of_feature_paths.append(images)
+        feature_data_list.append(feature_list)
+        labels_list.append(folder_name)
+        labels.append([folder_name] * len(feature_list))
+
+    return np.array(list_of_feature_paths), labels, labels_list
 
 def binarize_labels(labels):
 
