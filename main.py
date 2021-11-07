@@ -36,8 +36,8 @@ if __name__ == '__main__':
     # elif args.model == 'xception':
     #     model.xception()
 
-    model.model_trainable()
-    complied_model = model.model_compile()
+    # model.model_trainable()
+    # complied_model = model.model_compile()
 
     # if args.tsne:
     #     tsne_result_scaled, float_labels = tsne(list_of_image_paths, labels_list)
