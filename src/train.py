@@ -1,6 +1,7 @@
 from keras.callbacks import ModelCheckpoint
 from sklearn.model_selection import StratifiedShuffleSplit
-
+import numpy as np
+import pandas as pd
 
 def train_test_split(n_split):
 
@@ -48,3 +49,62 @@ def train_model(model, X_train, y_train, batch_size, num_epochs, X_test, y_test,
     print("[INFO] loss={:.4f}, accuracy: {:.4f}%".format(loss, accuracy * 100))
 
     return model, hist, loss, accuracy
+
+def five_cross_validation(dataset, labels, skf):
+
+    """
+
+      Function to return indexs of five cross validation
+
+      :param dataset: Dataset used for training and testing
+      :param labels: Dataset labels
+      :param skf: Corss validation split
+
+      :return: indexs of training and testing data
+
+    """
+
+    X_train_index = []
+    X_test_index = []
+    y_train_index = []
+    y_test_index = []
+
+    for train_index, test_index in skf.split(dataset, labels):
+
+        X_train_index.append(train_index)
+        X_test_index.append(test_index)
+        y_train_index.append(train_index)
+        y_test_index.append(test_index)
+
+    return X_train_index, X_test_index, y_train_index, y_test_index
+
+
+def leave_one_day_out(dataset, labels, timestamps):
+
+    """
+
+      Function to return indexs of leave one day out method
+
+      :param dataset: Dataset used for training and testing
+      :param labels: Dataset labels
+      :param
+
+      :return: indexs of training and testing data
+
+    """
+    df = pd.read_excel(timestamps, engine='openpyxl')
+
+    data_list = []
+    for i in ['Day 1', 'Day 2', 'Day 3', 'Day 4', "Day 5", 'Day 6', 'Day 7', 'Day 8', 'Day 9']:
+        data_list.append(df.index[df['Day no'] == i].tolist())
+
+    for i in range(0, 9):
+        train_list = []
+        test_list = []
+        for j in range(0, 9):
+            if j == i:
+                test_list.appned(data_list[j])
+            else:
+                train_list.append(train_list + data_list[j])
+
+    return train_list, test_list

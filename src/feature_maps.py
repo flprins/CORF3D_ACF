@@ -73,14 +73,15 @@ def temp_feature_maps(dataset):
     return np.array(list_of_inpainted_temp_map)
 
 
-def rgb_feature_map(model, model_name, counter):
+def rgb_msx_feature_map(model, model_name, counter):
 
     """
 
       Function to return an models feature maps
 
+      :param model_name: Name of the trained model
       :param model: Trained Convolutional neural network model
-      :param num_epochs: Num
+      :param counter: Number of folds
 
       :return: List of the response map of the temperature in an array form
 
@@ -88,7 +89,7 @@ def rgb_feature_map(model, model_name, counter):
 
     feature_map = Model(model.input,
                         model.layers[-2].output)
-    feature_map.save(model_name + str(counter) + ".h5")
+    feature_map.save("./feature_maps/" + model_name + str(counter) + ".h5")
 
     return feature_map
 
