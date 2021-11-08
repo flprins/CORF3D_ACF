@@ -1,12 +1,15 @@
 import matlab.engine
 import numpy as np
 import os
+
+from keras import Model
 from sklearn import preprocessing
 
 m = matlab.engine.start_matlab()
 
+
 def corf_feature_maps(dataset, sigma, beta, inhibitionFactor, highthresh):
-    
+
     """
 
     Function to return an list of CORF feature maps
@@ -40,6 +43,7 @@ def corf_feature_maps(dataset, sigma, beta, inhibitionFactor, highthresh):
 
     return np.array(list_of_image_paths)
 
+
 def temp_feature_maps(dataset):
 
     """
@@ -69,6 +73,26 @@ def temp_feature_maps(dataset):
     return np.array(list_of_inpainted_temp_map)
 
 
+def rgb_feature_map(model, model_name, counter):
+
+    """
+
+      Function to return an models feature maps
+
+      :param model: Trained Convolutional neural network model
+      :param num_epochs: Num
+
+      :return: List of the response map of the temperature in an array form
+
+    """
+
+    feature_map = Model(model.input,
+                        model.layers[-2].output)
+    feature_map.save(model_name + str(counter) + ".h5")
+
+    return feature_map
+
+
 def normalization(feature_maps):
 
     """
@@ -91,11 +115,11 @@ def normalization(feature_maps):
     return np.array(list_scaled_feature_maps)
 
 
-def concatenate(feature_maps_one, feature_map_two, feature_map_three):
+def feature_stack(feature_maps_one, feature_map_two, feature_map_three):
 
     """
 
-    Function to return an list of concatenated feature maps
+    Function to return an list of stacked feature maps
 
     :param feature_maps_one: List of feature maps of first channel
     :param feature_map_two: List of feature maps of second channel
@@ -114,3 +138,21 @@ def concatenate(feature_maps_one, feature_map_two, feature_map_three):
         list_concatenate.append(concatenate_features)
 
     return np.array(list_concatenate)
+
+
+def feature_fusion(feature_maps_one, feature_map_two):
+
+    """
+
+    Function to return an list of fused feature maps
+
+    :param feature_maps_one: Feature maps of model 1
+    :param feature_map_two: Feature maps of model 2
+
+    :return: Fused feature maps in an array form
+
+    """
+
+    features_fused = np.concatenate((feature_maps_one, feature_map_two), axis=1)
+
+    return features_fused

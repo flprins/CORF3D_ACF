@@ -27,6 +27,7 @@ if __name__ == '__main__':
     skf = train_test_split(5)
     all_fold_accuracy = []
     all_fold_loss = []
+    counter = 1
     model = Models()
 
     # if args.model == 'densenet121':

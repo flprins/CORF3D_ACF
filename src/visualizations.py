@@ -62,12 +62,13 @@ def tsne(images, labels):
     return tsne_result_scaled, float_labels
 
 
-def plot_data_graph(hist, num_epochs, model_name):
+def plot_data_graph(hist, num_epochs, counter, model_name):
 
     """
 
     Function to save and visualize plots
 
+    :param counter: Number of folds
     :param model_name: Name of the model
     :param hist: History of training
     :param num_epochs: Number of epochs
@@ -90,7 +91,7 @@ def plot_data_graph(hist, num_epochs, model_name):
     plt.grid(True)
     plt.legend(['train', 'val'])
     plt.show()
-    plt.savefig("./plots/" + model_name + "_loss")
+    plt.savefig("./plots/" + model_name + counter + "_loss")
 
     plt.figure(figsize=(12, 10))
     plt.plot(xc, train_acc)
@@ -101,4 +102,4 @@ def plot_data_graph(hist, num_epochs, model_name):
     plt.grid(True)
     plt.legend(['train', 'val'])
     plt.show()
-    plt.savefig("./plots/" + model_name + "_acc")
+    plt.savefig("./plots/" + model_name + counter + "_acc")
