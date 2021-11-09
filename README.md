@@ -34,7 +34,7 @@ conda create --name CORF3D_HCR python=3.6
 Clone this repository:
 
 ```bash
-git clone https://github.com/ameybhole/CAIIHC.git 
+https://github.com/ameybhole/CORF3D_HCR.git 
 ```
 
 Install requirements:
