@@ -79,15 +79,13 @@ def five_cross_validation(dataset, labels, skf):
     return X_train_index, X_test_index, y_train_index, y_test_index
 
 
-def leave_one_day_out(dataset, labels, timestamps):
+def leave_one_day_out(timestamps):
 
     """
 
       Function to return indexs of leave one day out method
 
-      :param dataset: Dataset used for training and testing
-      :param labels: Dataset labels
-      :param
+      :param timestamps: timestamps of the captured images
 
       :return: indexs of training and testing data
 
@@ -103,7 +101,7 @@ def leave_one_day_out(dataset, labels, timestamps):
         test_list = []
         for j in range(0, 9):
             if j == i:
-                test_list.appned(data_list[j])
+                test_list.append(data_list[j])
             else:
                 train_list.append(train_list + data_list[j])
 

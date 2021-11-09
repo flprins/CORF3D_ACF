@@ -88,18 +88,6 @@ class Models(object):
 
         self.model_out = Model(inputs=base_model.input, outputs=out)
 
-    def svm(self):
-
-        """
-
-             Function to return SVM model
-
-        """
-
-        svm_model = svm.SVC(kernel='linear')
-
-        return svm_model
-
     def model_trainable(self):
 
         """
