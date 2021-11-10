@@ -1,7 +1,7 @@
 import matlab.engine
 import numpy as np
 import os
-
+import cv2
 from keras import Model
 from sklearn import preprocessing
 
@@ -68,6 +68,7 @@ def temp_feature_maps(dataset):
             retrieve_dir = dataset + "/" + folder_name + "/" + image
             temp_map = m.temp_segmentation(retrieve_dir)
             temp_map = np.array(temp_map)
+            temp_map = cv2.resize(temp_map, (224,224))
             list_of_inpainted_temp_map.append(temp_map)
 
     return np.array(list_of_inpainted_temp_map)
@@ -89,7 +90,7 @@ def rgb_msx_feature_map(model, model_name, counter):
 
     feature_map = Model(model.input,
                         model.layers[-2].output)
-    feature_map.save("./feature_maps/" + model_name + str(counter) + ".h5")
+    feature_map.save("./feature_maps/" + model_name + "_" + str(counter) + ".h5")
 
     return feature_map
 

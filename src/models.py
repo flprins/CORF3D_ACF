@@ -1,14 +1,12 @@
-from keras.models import *
 from keras.optimizers import Adam
 from keras.layers import *
-from keras.engine import Model
+from keras import Model
 from keras.applications.densenet import DenseNet121
 from keras.applications.mobilenet import MobileNet
 from keras.applications.xception import Xception
-from sklearn import svm
+
 
 class Models(object):
-
     """
 
     Class to compile different pre-trained CNN models
@@ -41,7 +39,6 @@ class Models(object):
         self.model_out = None
 
     def densenet121(self):
-
         """
 
         Function to return DenseNet121 model
@@ -49,7 +46,7 @@ class Models(object):
         """
 
         base_model = DenseNet121(weights=self.weights, include_top=self.include_top,
-                              pooling='avg')
+                                 pooling='avg')
         x = base_model.layers[-1]
         out = Dense(units=self.num_classes, activation='softmax', name='output',
                     use_bias=True)(x.output)
@@ -57,7 +54,6 @@ class Models(object):
         self.model_out = Model(inputs=base_model.input, outputs=out)
 
     def mobilenet(self):
-
         """
 
         Function to return MobileNet model
@@ -65,7 +61,7 @@ class Models(object):
         """
 
         base_model = MobileNet(weights=self.weights, include_top=self.include_top,
-                                 pooling='avg')
+                               pooling='avg')
         x = base_model.layers[-1]
         out = Dense(units=self.num_classes, activation='softmax', name='output',
                     use_bias=True)(x.output)
@@ -73,7 +69,6 @@ class Models(object):
         self.model_out = Model(inputs=base_model.input, outputs=out)
 
     def xception(self):
-
         """
 
         Function to return Xception model
@@ -81,7 +76,7 @@ class Models(object):
         """
 
         base_model = Xception(weights=self.weights, include_top=self.include_top,
-                                 pooling='avg')
+                              pooling='avg')
         x = base_model.layers[-1]
         out = Dense(units=self.num_classes, activation='softmax', name='output',
                     use_bias=True)(x.output)
@@ -89,7 +84,6 @@ class Models(object):
         self.model_out = Model(inputs=base_model.input, outputs=out)
 
     def model_trainable(self):
-
         """
 
         Function to define if the layers should be trainable or not

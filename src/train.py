@@ -3,8 +3,8 @@ from sklearn.model_selection import StratifiedShuffleSplit
 import numpy as np
 import pandas as pd
 
-def train_test_split(n_split):
 
+def train_test_split(n_split):
     """
 
     Function to return train and test sets
@@ -19,12 +19,13 @@ def train_test_split(n_split):
     return skf
 
 
-def train_model(model, X_train, y_train, batch_size, num_epochs, X_test, y_test, model_name):
-
+def train_model(model, X_train, y_train, batch_size, num_epochs, X_test, y_test, model_name,
+                counter):
     """
 
     Function to Train model
 
+    :param counter: Number of folds
     :param X_test: Testing data
     :param X_train: Training data
     :param y_train: Training labels
@@ -37,7 +38,7 @@ def train_model(model, X_train, y_train, batch_size, num_epochs, X_test, y_test,
 
     """
 
-    filepath = "./models/" + model_name + "_model_weights.h5"
+    filepath = "./models/" + str(model_name) + "_" + str(counter) + "_model_weights.h5"
     checkpoint = ModelCheckpoint(filepath, monitor=["acc"], verbose=1, mode='max')
     callbacks_list = [checkpoint]
 
@@ -50,8 +51,8 @@ def train_model(model, X_train, y_train, batch_size, num_epochs, X_test, y_test,
 
     return model, hist, loss, accuracy
 
-def five_cross_validation(dataset, labels, skf):
 
+def five_cross_validation(dataset, labels, skf):
     """
 
       Function to return indexs of five cross validation
@@ -70,7 +71,6 @@ def five_cross_validation(dataset, labels, skf):
     y_test_index = []
 
     for train_index, test_index in skf.split(dataset, labels):
-
         X_train_index.append(train_index)
         X_test_index.append(test_index)
         y_train_index.append(train_index)
@@ -80,7 +80,6 @@ def five_cross_validation(dataset, labels, skf):
 
 
 def leave_one_day_out(timestamps):
-
     """
 
       Function to return indexs of leave one day out method

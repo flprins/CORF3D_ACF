@@ -17,7 +17,7 @@ def printWrongPredictions(pred, y_test, labels):
 
     array = []
 
-    for i in enumerate(pred):
+    for i in range(len(pred)):
         biggest_value_index = pred[i].argmax(axis=0)
         value = pred[i][biggest_value_index]
         y_classes = pred[i] >= value
@@ -30,7 +30,7 @@ def printWrongPredictions(pred, y_test, labels):
     y_test = lb.inverse_transform(y_test)
     pred = lb.inverse_transform(predicted_list)
 
-    for i in enumerate(y_test):
+    for i in range(len(y_test)):
         if y_test[i] != pred[i]:
             print("Predicted:", pred[i], " Actual: ", y_test[i])
 

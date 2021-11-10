@@ -2,7 +2,7 @@ import matlab.engine
 import numpy as np
 import os
 import cv2
-#
+import matplotlib.pyplot as plt
 m = matlab.engine.start_matlab()
 m.addpath('.\src\preprocessing', nargout=0)
 
@@ -25,6 +25,8 @@ def batch_data_preprocessing(dataset):
 
     data_dir_list = os.listdir(dataset)
     for folder_name in data_dir_list:
+        counter = 1
+        path_folder = "./" + "data" + "/" + "processed" + "/" + "Preprocessed_RGB" + "/"
         img_list = os.listdir(dataset + '/' + folder_name)
         for idx in range(0, len(img_list), 2):
             rgb_image_idx = img_list[idx]
@@ -40,8 +42,18 @@ def batch_data_preprocessing(dataset):
             mask = mask.astype('uint8')
             inpainted_image = cv2.inpaint(RGB, mask, 3, cv2.INPAINT_TELEA)
             inpainted_image = cv2.resize(inpainted_image, (224, 224))
+            if os.path.exists(path_folder):
+                if os.path.exists(path_folder + "/" + str(folder_name)):
+
+                    image_name = path_folder + "/" + str(folder_name) + "/" + str(folder_name) + "_" + str(counter) + ".jpg"
+                    plt.imsave(image_name, inpainted_image)
+                    counter = counter + 1
+                else:
+                    os.mkdir(path_folder + "/" + str(folder_name))
+            else:
+                os.mkdir(path_folder)
             list_of_inpainted_images.append(inpainted_image)
         labels_list.append(folder_name)
-        labels.append([folder_name] * len(img_list))
+        labels.append([folder_name] * (len(img_list)//2))
 
     return np.array(list_of_inpainted_images), labels, labels_list

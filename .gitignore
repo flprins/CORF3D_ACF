@@ -1,7 +1,9 @@
 data/
 models/
-venv/
+plots/
+feature_maps/
 .idea/
 src/__pycache__/
 *.py[cod]
+
 

@@ -90,8 +90,7 @@ def plot_data_graph(hist, num_epochs, counter, model_name):
     plt.title('train_loss vs val_loss')
     plt.grid(True)
     plt.legend(['train', 'val'])
-    plt.show()
-    plt.savefig("./plots/" + model_name + counter + "_loss")
+    plt.savefig("./plots/" + str(model_name) + "_" + str(counter) + "_loss")
 
     plt.figure(figsize=(12, 10))
     plt.plot(xc, train_acc)
@@ -101,5 +100,4 @@ def plot_data_graph(hist, num_epochs, counter, model_name):
     plt.title('train_acc vs val_acc')
     plt.grid(True)
     plt.legend(['train', 'val'])
-    plt.show()
-    plt.savefig("./plots/" + model_name + counter + "_acc")
+    plt.savefig("./plots/" + str(model_name) + "_" + str(counter) + "_acc")

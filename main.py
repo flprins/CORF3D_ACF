@@ -38,11 +38,13 @@ if __name__ == '__main__':
     parser.add_argument('--feature_map_1', type=str, choices=["RGB", "MSX"], default="RGB",
                         help='Which Feature map 1 you are using.')
     parser.add_argument('--feature_map_2', type=str, choices=["CORF3D", "TEMP3D", "MSX"],
-                        default="CORF3D",
+                        default="", required=False,
                         help='Which Feature map 2 you are using.')
-    parser.add_argument('--dataset_1', type=str, default="./data/processed/RGB",
+    parser.add_argument('--dataset_1', type=str, default="./data/interim/Pre-segmentation",
+                        required=False,
                         help='Dataset 1 you are using.')
-    parser.add_argument('--dataset_2', type=str, default="./data/processed/CORF_3D",
+    parser.add_argument('--dataset_2', type=str, default="./data/processed/Preprocessed_RGB",
+                        required=False,
                         help='Dataset 2 you are using.')
     parser.add_argument('--timestamp', type=str, default="./data/timestamp.xlsx",
                         help='Timestamp file')
@@ -65,11 +67,10 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default="densenet121",
                         help='Your pre-trained classification model of choice')
     args = parser.parse_args()
-    if args.preprocessing:
-        parser.description('Please follow the pre-segmentation instruction on github')
-    if args.mode != "fusion" and args.dataset_2:
+
+    if args.mode != "fusion" and args.dataset_2 and not args.feature_map_2 == "CORF3D":
         parser.error('Please enter only one dataset')
-    if args.mode != "single" and (args.dataset_2 == '' or args.dataset_1 == ''):
+    if args.mode != "single" and not args.preprocessing:
         parser.error('Please enter both the datasets')
     if args.dataset_1 and not args.preprocessing:
         for f in os.listdir(args.dataset_1):
@@ -79,52 +80,48 @@ if __name__ == '__main__':
 
     if args.preprocessing:
 
-        if args.feature_map_1 and args.feature_map_2 == "CORF_3D":
-
+        if args.feature_map_1 == "RGB" and args.feature_map_2 == "CORF3D" and args.mode == "fusion":
+            print("entered")
             dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1)
-            corf_feature_set_1 = corf_feature_maps(dataset_1, 2.2, 4, 0, 0.005)
+            corf_feature_set_1 = corf_feature_maps(args.dataset_2, 2.2, 4, 0.0, 0.005)
             corf_feature_set_norm_1 = normalization(corf_feature_set_1)
-            corf_feature_set_2 = corf_feature_maps(dataset_1, 2.2, 4, 1.8, 0.005)
+            corf_feature_set_2 = corf_feature_maps(args.dataset_2, 2.2, 4, 1.8, 0.005)
             corf_feature_set_norm_2 = normalization(corf_feature_set_2)
-            corf_feature_set_3 = corf_feature_maps(dataset_1, 2.2, 4, 3.6, 0.005)
+            corf_feature_set_3 = corf_feature_maps(args.dataset_2, 2.2, 4, 3.6, 0.005)
             corf_feature_set_norm_3 = normalization(corf_feature_set_3)
-            corf_feature_set = feature_stack(corf_feature_set_norm_1, corf_feature_set_norm_2,
-                                             corf_feature_set_norm_3)
-            dataset_2 = cv2.resize(corf_feature_set, (args.resize, args.resize))
+            dataset_2 = feature_stack(corf_feature_set_norm_1, corf_feature_set_norm_2,
+                                      corf_feature_set_norm_3)
 
-        elif args.feature_map_1 and args.feature_map_2 == "TEMP_3D":
+        elif args.feature_map_1 == "RGB" and args.feature_map_2 == "TEMP3D" and args.mode == "fusion":
 
             dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1)
             temp_feature_set_1 = temp_feature_maps(args.dataset_2)
             temp_feature_set_norm_1 = normalization(temp_feature_set_1)
-            temp_feature_set = feature_stack(temp_feature_set_norm_1, temp_feature_set_norm_1,
-                                             temp_feature_set_norm_1)
-            dataset_2 = cv2.resize(temp_feature_set, (args.resize, args.resize))
+            dataset_2 = feature_stack(temp_feature_set_norm_1, temp_feature_set_norm_1,
+                                      temp_feature_set_norm_1)
 
         elif args.feature_map_1:
 
             dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1)
 
-        elif args.feature_map_2 == "TEMP3D":
+        elif args.feature_map_2 == "TEMP3D" and args.mode == "single":
 
-            temp_feature_set_1 = temp_feature_maps(args.dataset_1)
+            temp_feature_set_1 = temp_feature_maps(args.dataset_2)
             temp_feature_set_norm_1 = normalization(temp_feature_set_1)
-            temp_feature_set = feature_stack(temp_feature_set_norm_1, temp_feature_set_norm_1,
+            dataset_1 = feature_stack(temp_feature_set_norm_1, temp_feature_set_norm_1,
                                              temp_feature_set_norm_1)
-            dataset_1 = cv2.resize(temp_feature_set, (args.resize, args.resize))
 
-        elif args.feature_map_2 == "CORF3D":
+        elif args.feature_map_2 == "CORF3D" and args.mode == "single":
 
             dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1)
-            corf_feature_set_1 = corf_feature_maps(dataset_1, 2.2, 4, 0, 0.005)
+            corf_feature_set_1 = corf_feature_maps(args.dataset_2, 2.2, 4, 0, 0.005)
             corf_feature_set_norm_1 = normalization(corf_feature_set_1)
-            corf_feature_set_2 = corf_feature_maps(dataset_1, 2.2, 4, 1.8, 0.005)
+            corf_feature_set_2 = corf_feature_maps(args.dataset_2, 2.2, 4, 1.8, 0.005)
             corf_feature_set_norm_2 = normalization(corf_feature_set_2)
-            corf_feature_set_3 = corf_feature_maps(dataset_1, 2.2, 4, 3.6, 0.005)
+            corf_feature_set_3 = corf_feature_maps(args.dataset_2, 2.2, 4, 3.6, 0.005)
             corf_feature_set_norm_3 = normalization(corf_feature_set_3)
             corf_feature_set = feature_stack(corf_feature_set_norm_1, corf_feature_set_norm_2,
                                              corf_feature_set_norm_3)
-            dataset_1 = cv2.resize(corf_feature_set, (args.resize, args.resize))
 
         binarizelabels = binarize_labels(labels)
 
@@ -135,7 +132,7 @@ if __name__ == '__main__':
             dataset_1, labels, labels_list = load_images(args.dataset_1, 224)
             dataset_2, labels, labels_list = load_images(args.dataset_2, 224)
 
-        elif args.feautre_map_1:
+        elif args.feature_map_1:
 
             dataset_1, labels, labels_list = load_images(args.dataset_1, 224)
 
@@ -169,7 +166,7 @@ if __name__ == '__main__':
         model.xception()
 
     model.model_trainable()
-    complied_model = model.model_compile(args.learning_rate)
+    compiled_model = model.model_compile(args.learning_rate)
 
     if args.method == "5_fold":
 
@@ -183,10 +180,10 @@ if __name__ == '__main__':
                 X_train, X_test = dataset_1[X_train_index[i]], dataset_1[X_test_index[i]]
                 y_train, y_test = binarizelabels[y_train_index[i]], binarizelabels[y_test_index[i]]
 
-                model, hist, loss, accuracy = train_model(complied_model, X_train,
+                model, hist, loss, accuracy = train_model(compiled_model, X_train,
                                                           y_train, args.batch_size,
                                                           args.num_epochs, X_test, y_test,
-                                                          args.model)
+                                                          args.model, counter)
 
                 plot_data_graph(hist, args.num_epochs, counter, args.model)
                 pred = model_predictions(model, X_test)
@@ -199,22 +196,20 @@ if __name__ == '__main__':
 
             for i in range(0, len(X_train_index)):
                 X_train_1, X_test_1 = dataset_1[X_train_index[i]], dataset_1[X_test_index[i]]
-                y_train_1, y_test_1 = binarizelabels[y_train_index[i]], binarizelabels[
-                    y_test_index[i]]
+                y_train_1, y_test_1 = binarizelabels[y_train_index[i]], binarizelabels[y_test_index[i]]
 
                 X_train_2, X_test_2 = dataset_2[X_train_index[i]], dataset_2[X_test_index[i]]
-                y_train_2, y_test_2 = binarizelabels[y_train_index[i]], binarizelabels[
-                    y_test_index[i]]
+                y_train_2, y_test_2 = binarizelabels[y_train_index[i]], binarizelabels[y_test_index[i]]
 
-                model_1, hist_1, loss_1, accuracy_1 = train_model(complied_model, X_train_1,
+                model_1, hist_1, loss_1, accuracy_1 = train_model(compiled_model, X_train_1,
                                                                   y_train_1, args.batch_size,
-                                                                  args.num_epochs,
-                                                                  X_test_1, y_test_1, args.model)
+                                                                  args.num_epochs, X_test_1,
+                                                                  y_test_1, args.model, counter)
 
-                model_2, hist_2, loss_2, accuracy_2 = train_model(complied_model, X_train_1,
+                model_2, hist_2, loss_2, accuracy_2 = train_model(compiled_model, X_train_1,
                                                                   y_train_1, args.batch_size,
-                                                                  args.num_epochs,
-                                                                  X_test_1, y_test_1, args.model)
+                                                                  args.num_epochs, X_test_1,
+                                                                  y_test_1, args.model, counter)
 
                 plot_data_graph(hist_1, args.num_epochs, counter, args.model)
                 pred_1 = model_predictions(model_1, X_test_1)
@@ -266,10 +261,10 @@ if __name__ == '__main__':
                 X_train, X_test = dataset_1[train_list[i]], dataset_1[test_list[i]]
                 y_train, y_test = binarizelabels[train_list[i]], binarizelabels[test_list[i]]
 
-                model, hist, loss, accuracy = train_model(complied_model, X_train,
+                model, hist, loss, accuracy = train_model(compiled_model, X_train,
                                                           y_train, args.batch_size,
                                                           args.num_epochs, X_test, y_test,
-                                                          args.model)
+                                                          args.model, counter)
 
                 plot_data_graph(hist, args.num_epochs, counter, args.model)
                 pred = model_predictions(model, X_test)
@@ -287,15 +282,17 @@ if __name__ == '__main__':
                 X_train_2, X_test_2 = dataset_2[train_list[i]], dataset_2[test_list[i]]
                 y_train_2, y_test_2 = binarizelabels[train_list[i]], binarizelabels[test_list[i]]
 
-                model_1, hist_1, loss_1, accuracy_1 = train_model(complied_model, X_train_1,
+                model_1, hist_1, loss_1, accuracy_1 = train_model(compiled_model, X_train_1,
                                                                   y_train_1, args.batch_size,
                                                                   args.num_epochs,
-                                                                  X_test_1, y_test_1, args.model)
+                                                                  X_test_1, y_test_1,
+                                                                  args.model, counter)
 
-                model_2, hist_2, loss_2, accuracy_2 = train_model(complied_model, X_train_1,
+                model_2, hist_2, loss_2, accuracy_2 = train_model(compiled_model, X_train_1,
                                                                   y_train_1, args.batch_size,
-                                                                  args.num_epochs,
-                                                                  X_test_1, y_test_1, args.model)
+                                                                  args.num_epochs, X_test_1,
+                                                                  y_test_1, args.model,
+                                                                  counter)
 
                 # Convert to single column
                 y_train = np.argmax(y_train_1, axis=1)
