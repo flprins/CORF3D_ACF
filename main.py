@@ -44,7 +44,7 @@ if __name__ == '__main__':
                         required=False,
                         help='Dataset 1 you are using.')
     parser.add_argument('--dataset_2', type=str,
-                        default="",
+                        default="./data/processed/Preprocessed_RGB",
                         required=False,
                         help='Dataset 2 you are using.')
     parser.add_argument('--timestamp', type=str, default="./data/timestamp.xlsx",
@@ -312,8 +312,8 @@ if __name__ == '__main__':
                 features_train_1 = model_1_feature_map.predict(X_train_1)
                 features_test_1 = model_1_feature_map.predict(X_test_1)
 
-                features_train_2 = model.predict(X_train_2)
-                features_test_2 = model.predict(X_test_2)
+                features_train_2 = model_2.predict(X_train_2)
+                features_test_2 = model_2.predict(X_test_2)
 
                 combined_feature_train = feature_fusion(features_train_1, features_train_2)
                 combined_feature_test = feature_fusion(features_test_1, features_test_2)
