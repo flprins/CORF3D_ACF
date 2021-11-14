@@ -43,7 +43,8 @@ if __name__ == '__main__':
     parser.add_argument('--dataset_1', type=str, default="./data/interim/Pre-segmentation",
                         required=False,
                         help='Dataset 1 you are using.')
-    parser.add_argument('--dataset_2', type=str, default="./data/processed/Preprocessed_RGB",
+    parser.add_argument('--dataset_2', type=str,
+                        default="",
                         required=False,
                         help='Dataset 2 you are using.')
     parser.add_argument('--timestamp', type=str, default="./data/timestamp.xlsx",
@@ -81,7 +82,7 @@ if __name__ == '__main__':
     if args.preprocessing:
 
         if args.feature_map_1 == "RGB" and args.feature_map_2 == "CORF3D" and args.mode == "fusion":
-            print("entered")
+
             dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1)
             corf_feature_set_1 = corf_feature_maps(args.dataset_2, 2.2, 4, 0.0, 0.005)
             corf_feature_set_norm_1 = normalization(corf_feature_set_1)
@@ -109,7 +110,7 @@ if __name__ == '__main__':
             temp_feature_set_1 = temp_feature_maps(args.dataset_2)
             temp_feature_set_norm_1 = normalization(temp_feature_set_1)
             dataset_1 = feature_stack(temp_feature_set_norm_1, temp_feature_set_norm_1,
-                                             temp_feature_set_norm_1)
+                                      temp_feature_set_norm_1)
 
         elif args.feature_map_2 == "CORF3D" and args.mode == "single":
 
@@ -179,7 +180,8 @@ if __name__ == '__main__':
             for i in range(0, len(X_train_index)):
                 X_train, X_test = dataset_1[X_train_index[i]], dataset_1[X_test_index[i]]
                 y_train, y_test = binarizelabels[y_train_index[i]], binarizelabels[y_test_index[i]]
-
+                print(X_train.shape)
+                print(X_test.shape)
                 model, hist, loss, accuracy = train_model(compiled_model, X_train,
                                                           y_train, args.batch_size,
                                                           args.num_epochs, X_test, y_test,
@@ -206,19 +208,21 @@ if __name__ == '__main__':
                                                                   args.num_epochs, X_test_1,
                                                                   y_test_1, args.model, counter)
 
-                model_2, hist_2, loss_2, accuracy_2 = train_model(compiled_model, X_train_1,
-                                                                  y_train_1, args.batch_size,
-                                                                  args.num_epochs, X_test_1,
-                                                                  y_test_1, args.model, counter)
+                model_2, hist_2, loss_2, accuracy_2 = train_model(compiled_model, X_train_2,
+                                                                  y_train_2, args.batch_size,
+                                                                  args.num_epochs, X_test_2,
+                                                                  y_test_2, args.model, counter)
 
                 plot_data_graph(hist_1, args.num_epochs, counter, args.model)
                 pred_1 = model_predictions(model_1, X_test_1)
+                print("Wrong predictions of model 1")
                 printWrongPredictions(pred_1, y_test_1, labels)
                 all_fold_accuracy_1.append(accuracy_1 * 100)
                 all_fold_loss_1.append(loss_1)
 
                 plot_data_graph(hist_2, args.num_epochs, counter, args.model)
                 pred_2 = model_predictions(model_2, X_test_2)
+                print(" Wrong predictions of model 2")
                 printWrongPredictions(pred_2, y_test_2, labels)
                 all_fold_accuracy_2.append(accuracy_2 * 100)
                 all_fold_loss_2.append(loss_2)
@@ -253,13 +257,15 @@ if __name__ == '__main__':
 
     elif args.method == "leave_one_day_out":
 
-        train_list, test_list = leave_one_day_out(args.timestamp)
+        X_train_index, X_test_index, y_train_index, y_test_index = leave_one_day_out(args.timestamp,
+                                                                                     dataset_1, binarizelabels)
 
         if args.mode == "single":
 
-            for i in range(0, 9):
-                X_train, X_test = dataset_1[train_list[i]], dataset_1[test_list[i]]
-                y_train, y_test = binarizelabels[train_list[i]], binarizelabels[test_list[i]]
+            for i in range(0, len(X_train_index)):
+
+                X_train, X_test = dataset_1[X_train_index[i]], dataset_1[X_test_index[i]]
+                y_train, y_test = binarizelabels[y_train_index[i]], binarizelabels[y_test_index[i]]
 
                 model, hist, loss, accuracy = train_model(compiled_model, X_train,
                                                           y_train, args.batch_size,
@@ -275,12 +281,13 @@ if __name__ == '__main__':
 
         if args.mode == "fusion":
 
-            for i in range(0, 9):
-                X_train_1, X_test_1 = dataset_1[train_list[i]], dataset_1[test_list[i]]
-                y_train_1, y_test_1 = binarizelabels[train_list[i]], binarizelabels[test_list[i]]
+            for i in range(0, len(X_train_index)):
 
-                X_train_2, X_test_2 = dataset_2[train_list[i]], dataset_2[test_list[i]]
-                y_train_2, y_test_2 = binarizelabels[train_list[i]], binarizelabels[test_list[i]]
+                X_train_1, X_test_1 = dataset_1[X_train_index[i]], dataset_1[X_test_index[i]]
+                y_train_1, y_test_1 = binarizelabels[y_train_index[i]], binarizelabels[y_test_index[i]]
+
+                X_train_2, X_test_2 = dataset_2[X_train_index[i]], dataset_2[X_test_index[i]]
+                y_train_2, y_test_2 = binarizelabels[y_train_index[i]], binarizelabels[y_test_index[i]]
 
                 model_1, hist_1, loss_1, accuracy_1 = train_model(compiled_model, X_train_1,
                                                                   y_train_1, args.batch_size,
@@ -288,10 +295,10 @@ if __name__ == '__main__':
                                                                   X_test_1, y_test_1,
                                                                   args.model, counter)
 
-                model_2, hist_2, loss_2, accuracy_2 = train_model(compiled_model, X_train_1,
-                                                                  y_train_1, args.batch_size,
-                                                                  args.num_epochs, X_test_1,
-                                                                  y_test_1, args.model,
+                model_2, hist_2, loss_2, accuracy_2 = train_model(compiled_model, X_train_2,
+                                                                  y_train_2, args.batch_size,
+                                                                  args.num_epochs, X_test_2,
+                                                                  y_test_2, args.model,
                                                                   counter)
 
                 # Convert to single column
@@ -305,8 +312,8 @@ if __name__ == '__main__':
                 features_train_1 = model_1_feature_map.predict(X_train_1)
                 features_test_1 = model_1_feature_map.predict(X_test_1)
 
-                features_train_2 = model_2_feature_map.predict(X_train_2)
-                features_test_2 = model_2_feature_map.predict(X_test_2)
+                features_train_2 = model.predict(X_train_2)
+                features_test_2 = model.predict(X_test_2)
 
                 combined_feature_train = feature_fusion(features_train_1, features_train_2)
                 combined_feature_test = feature_fusion(features_test_1, features_test_2)

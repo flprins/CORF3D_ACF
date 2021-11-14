@@ -1,10 +1,11 @@
 from keras.callbacks import ModelCheckpoint
-from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.model_selection import StratifiedShuffleSplit, LeaveOneGroupOut
 import numpy as np
 import pandas as pd
-
+from sklearn.model_selection import GroupKFold
 
 def train_test_split(n_split):
+
     """
 
     Function to return train and test sets
@@ -53,6 +54,7 @@ def train_model(model, X_train, y_train, batch_size, num_epochs, X_test, y_test,
 
 
 def five_cross_validation(dataset, labels, skf):
+
     """
 
       Function to return indexs of five cross validation
@@ -79,29 +81,37 @@ def five_cross_validation(dataset, labels, skf):
     return X_train_index, X_test_index, y_train_index, y_test_index
 
 
-def leave_one_day_out(timestamps):
+def leave_one_day_out(timestamps, dataset, labels):
+
     """
 
-      Function to return indexs of leave one day out method
+      Function to return index of leave one day out method
 
       :param timestamps: timestamps of the captured images
+      :param dataset: Dataset used for training and testing
+      :param labels: Dataset labels
 
-      :return: indexs of training and testing data
+      :return: index of training and testing data
 
     """
+
     df = pd.read_excel(timestamps, engine='openpyxl')
 
     data_list = []
-    for i in ['Day 1', 'Day 2', 'Day 3', 'Day 4', "Day 5", 'Day 6', 'Day 7', 'Day 8', 'Day 9']:
-        data_list.append(df.index[df['Day no'] == i].tolist())
+    data_list.extend(df['Day no'].tolist())
 
-    for i in range(0, 9):
-        train_list = []
-        test_list = []
-        for j in range(0, 9):
-            if j == i:
-                test_list.append(data_list[j])
-            else:
-                train_list.append(train_list + data_list[j])
+    X_train_index = []
+    X_test_index = []
+    y_train_index = []
+    y_test_index = []
+    logo = LeaveOneGroupOut()
+    logo.get_n_splits(groups=data_list)
 
-    return train_list, test_list
+    for train_index, test_index in logo.split(dataset, labels, data_list):
+        X_train_index.append(train_index)
+        X_test_index.append(test_index)
+        y_train_index.append(train_index)
+        y_test_index.append(test_index)
+
+    return X_train_index, X_test_index, y_train_index, y_test_index
+
