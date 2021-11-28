@@ -1,8 +1,9 @@
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 from sklearn.model_selection import StratifiedShuffleSplit, LeaveOneGroupOut
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import GroupKFold
+
 
 def train_test_split(n_split):
 
@@ -21,11 +22,12 @@ def train_test_split(n_split):
 
 
 def train_model(model, X_train, y_train, batch_size, num_epochs, X_test, y_test, model_name,
-                counter):
+                counter, feature_map):
     """
 
     Function to Train model
 
+    :param feature_map: Name of the feature map on which the model is trained
     :param counter: Number of folds
     :param X_test: Testing data
     :param X_train: Training data
@@ -39,12 +41,15 @@ def train_model(model, X_train, y_train, batch_size, num_epochs, X_test, y_test,
 
     """
 
-    filepath = "./models/" + str(model_name) + "_" + str(counter) + "_model_weights.h5"
-    checkpoint = ModelCheckpoint(filepath, monitor=["acc"], verbose=1, mode='max')
-    callbacks_list = [checkpoint]
+    filepath = "./models/" + str(model_name) + "_" + str(counter) + "_" + str(feature_map)+ "_model.h5"
+    earlyStopping = EarlyStopping(monitor='val_categorical_accuracy', patience=5, verbose=2,
+                                  mode='auto')
+    checkpoint = ModelCheckpoint(filepath, save_best_only=True, monitor='val_categorical_accuracy',
+                                 mode='auto')
+    callbacks_list = [earlyStopping, checkpoint]
 
     hist = model.fit(X_train, y_train, batch_size=batch_size, epochs=num_epochs,
-                     verbose=1,
+                     verbose=2,
                      validation_data=(X_test, y_test), callbacks=callbacks_list)
 
     (loss, accuracy) = model.evaluate(X_test, y_test, batch_size=batch_size, verbose=1)
@@ -54,7 +59,6 @@ def train_model(model, X_train, y_train, batch_size, num_epochs, X_test, y_test,
 
 
 def five_cross_validation(dataset, labels, skf):
-
     """
 
       Function to return indexs of five cross validation
@@ -82,7 +86,6 @@ def five_cross_validation(dataset, labels, skf):
 
 
 def leave_one_day_out(timestamps, dataset, labels):
-
     """
 
       Function to return index of leave one day out method
@@ -114,4 +117,3 @@ def leave_one_day_out(timestamps, dataset, labels):
         y_test_index.append(test_index)
 
     return X_train_index, X_test_index, y_train_index, y_test_index
-

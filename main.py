@@ -10,7 +10,7 @@ from src.feature_maps import corf_feature_maps, temp_feature_maps, feature_fusio
 from src.models import Models
 from src.train import train_test_split, train_model, five_cross_validation, leave_one_day_out
 from src.visualizations import plot_data_graph
-# import matplotlib.pyplot as plt
+from tensorflow import keras
 import os
 import numpy as np
 
@@ -35,16 +35,17 @@ if __name__ == '__main__':
     parser.add_argument('--mode', type=str, choices=["single", "fusion"],
                         default="fusion",
                         help='Select "single", or "fusion" mode')
-    parser.add_argument('--feature_map_1', type=str, choices=["RGB", "MSX"], default="RGB",
+    parser.add_argument('--feature_map_1', type=str, choices=["RGB", "MSX"],
+                        required=False, default="",
                         help='Which Feature map 1 you are using.')
     parser.add_argument('--feature_map_2', type=str, choices=["CORF3D", "TEMP3D", "MSX"],
                         default="", required=False,
                         help='Which Feature map 2 you are using.')
-    parser.add_argument('--dataset_1', type=str, default="./data/interim/Pre-segmentation",
+    parser.add_argument('--dataset_1', type=str, default="./data/interim/pre-segmentation-RGB",
                         required=False,
                         help='Dataset 1 you are using.')
     parser.add_argument('--dataset_2', type=str,
-                        default="./data/processed/Preprocessed_RGB",
+                        default="./data/interim/pre-segmentation-MSX",
                         required=False,
                         help='Dataset 2 you are using.')
     parser.add_argument('--timestamp', type=str, default="./data/timestamp.xlsx",
@@ -69,10 +70,11 @@ if __name__ == '__main__':
                         help='Your pre-trained classification model of choice')
     args = parser.parse_args()
 
-    if args.mode != "fusion" and args.dataset_2 and not args.feature_map_2 == "CORF3D":
-        parser.error('Please enter only one dataset')
-    if args.mode != "single" and not args.preprocessing:
-        parser.error('Please enter both the datasets')
+    # if args.mode != "fusion" and args.dataset_2 and not args.feature_map_2 == "CORF3D" or \
+    #         "TEMP3D" or "MSX":
+    #     parser.error('Please enter only one dataset')
+    # if args.mode != "single" and not args.preprocessing:
+    #     parser.error('Please enter both the datasets')
     if args.dataset_1 and not args.preprocessing:
         for f in os.listdir(args.dataset_1):
             name, ext = os.path.splitext(f)
@@ -80,10 +82,11 @@ if __name__ == '__main__':
                 parser.error('Please select folder with RGB or MSX images')
 
     if args.preprocessing:
-
+        print("entered 1")
         if args.feature_map_1 == "RGB" and args.feature_map_2 == "CORF3D" and args.mode == "fusion":
 
-            dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1)
+            dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1,
+                                                                      args.feature_map_1)
             corf_feature_set_1 = corf_feature_maps(args.dataset_2, 2.2, 4, 0.0, 0.005)
             corf_feature_set_norm_1 = normalization(corf_feature_set_1)
             corf_feature_set_2 = corf_feature_maps(args.dataset_2, 2.2, 4, 1.8, 0.005)
@@ -95,26 +98,33 @@ if __name__ == '__main__':
 
         elif args.feature_map_1 == "RGB" and args.feature_map_2 == "TEMP3D" and args.mode == "fusion":
 
-            dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1)
+            dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1,
+                                                                      args.feature_map_1)
             temp_feature_set_1 = temp_feature_maps(args.dataset_2)
             temp_feature_set_norm_1 = normalization(temp_feature_set_1)
             dataset_2 = feature_stack(temp_feature_set_norm_1, temp_feature_set_norm_1,
                                       temp_feature_set_norm_1)
 
-        elif args.feature_map_1:
+        elif args.feature_map_1 == "RGB" and args.feature_map_2 == "MSX" and args.mode == "fusion":
+            print("entered 2")
+            dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1,
+                                                                      args.feature_map_1)
+            dataset_2, labels, labels_list = batch_data_preprocessing(args.dataset_2,
+                                                                      args.feature_map_2)
 
-            dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1)
+        elif args.feature_map_1 == "RGB" or "MSX" and args.mode == "single":
+
+            dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1, args.feature_map_1)
 
         elif args.feature_map_2 == "TEMP3D" and args.mode == "single":
 
-            temp_feature_set_1 = temp_feature_maps(args.dataset_2)
+            temp_feature_set_1, labels_list, labels = temp_feature_maps(args.dataset_2)
             temp_feature_set_norm_1 = normalization(temp_feature_set_1)
             dataset_1 = feature_stack(temp_feature_set_norm_1, temp_feature_set_norm_1,
                                       temp_feature_set_norm_1)
 
         elif args.feature_map_2 == "CORF3D" and args.mode == "single":
 
-            dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1)
             corf_feature_set_1 = corf_feature_maps(args.dataset_2, 2.2, 4, 0, 0.005)
             corf_feature_set_norm_1 = normalization(corf_feature_set_1)
             corf_feature_set_2 = corf_feature_maps(args.dataset_2, 2.2, 4, 1.8, 0.005)
@@ -180,8 +190,7 @@ if __name__ == '__main__':
             for i in range(0, len(X_train_index)):
                 X_train, X_test = dataset_1[X_train_index[i]], dataset_1[X_test_index[i]]
                 y_train, y_test = binarizelabels[y_train_index[i]], binarizelabels[y_test_index[i]]
-                print(X_train.shape)
-                print(X_test.shape)
+
                 model, hist, loss, accuracy = train_model(compiled_model, X_train,
                                                           y_train, args.batch_size,
                                                           args.num_epochs, X_test, y_test,
@@ -206,12 +215,14 @@ if __name__ == '__main__':
                 model_1, hist_1, loss_1, accuracy_1 = train_model(compiled_model, X_train_1,
                                                                   y_train_1, args.batch_size,
                                                                   args.num_epochs, X_test_1,
-                                                                  y_test_1, args.model, counter)
+                                                                  y_test_1, args.model, counter,
+                                                                  args.feature_map_1)
 
                 model_2, hist_2, loss_2, accuracy_2 = train_model(compiled_model, X_train_2,
                                                                   y_train_2, args.batch_size,
                                                                   args.num_epochs, X_test_2,
-                                                                  y_test_2, args.model, counter)
+                                                                  y_test_2, args.model, counter,
+                                                                  args.feature_map_2)
 
                 plot_data_graph(hist_1, args.num_epochs, counter, args.model)
                 pred_1 = model_predictions(model_1, X_test_1)
@@ -231,9 +242,17 @@ if __name__ == '__main__':
                 y_train = np.argmax(y_train_1, axis=1)
                 y_test = np.argmax(y_test_1, axis=1)
 
+                # Load models
+                filepath_1 = "./models/" + str(args.model_name) + "_" + str(counter) + "_" + \
+                           str(args.feature_map_1) + "_model.h5"
+                filepath_2 = "./models/" + str(args.model_name) + "_" + str(counter) + "_" + \
+                             str(args.feature_map_2) + "_model.h5"
+                trained_model_1 = keras.models.load_model(filepath_1)
+                trained_model_2 = keras.models.load_model(filepath_2)
+
                 # Extract features
-                model_1_feature_map = rgb_msx_feature_map(model_1, args.model, counter)
-                model_2_feature_map = rgb_msx_feature_map(model_2, args.model, counter)
+                model_1_feature_map = rgb_msx_feature_map(trained_model_1, args.model, counter)
+                model_2_feature_map = rgb_msx_feature_map(trained_model_2, args.model, counter)
 
                 features_train_1 = model_1_feature_map.predict(X_train_1)
                 features_test_1 = model_1_feature_map.predict(X_test_1)
@@ -291,23 +310,31 @@ if __name__ == '__main__':
 
                 model_1, hist_1, loss_1, accuracy_1 = train_model(compiled_model, X_train_1,
                                                                   y_train_1, args.batch_size,
-                                                                  args.num_epochs,
-                                                                  X_test_1, y_test_1,
-                                                                  args.model, counter)
+                                                                  args.num_epochs, X_test_1,
+                                                                  y_test_1, args.model, counter,
+                                                                  args.feature_map_1)
 
                 model_2, hist_2, loss_2, accuracy_2 = train_model(compiled_model, X_train_2,
                                                                   y_train_2, args.batch_size,
                                                                   args.num_epochs, X_test_2,
-                                                                  y_test_2, args.model,
-                                                                  counter)
+                                                                  y_test_2, args.model, counter,
+                                                                  args.feature_map_2)
 
                 # Convert to single column
                 y_train = np.argmax(y_train_1, axis=1)
                 y_test = np.argmax(y_test_1, axis=1)
 
+                # Load models
+                filepath_1 = "./models/" + str(args.model_name) + "_" + str(counter) + "_" + \
+                             str(args.feature_map_1) + "_model.h5"
+                filepath_2 = "./models/" + str(args.model_name) + "_" + str(counter) + "_" + \
+                             str(args.feature_map_2) + "_model.h5"
+                trained_model_1 = keras.models.load_model(filepath_1)
+                trained_model_2 = keras.models.load_model(filepath_2)
+
                 # Extract features
-                model_1_feature_map = rgb_msx_feature_map(model_1, args.model, counter)
-                model_2_feature_map = rgb_msx_feature_map(model_2, args.model, counter)
+                model_1_feature_map = rgb_msx_feature_map(trained_model_1, args.model, counter)
+                model_2_feature_map = rgb_msx_feature_map(trained_model_2, args.model, counter)
 
                 features_train_1 = model_1_feature_map.predict(X_train_1)
                 features_test_1 = model_1_feature_map.predict(X_test_1)

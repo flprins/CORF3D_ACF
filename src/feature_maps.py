@@ -57,6 +57,8 @@ def temp_feature_maps(dataset):
     """
 
     list_of_inpainted_temp_map = []
+    labels = []
+    labels_list = []
 
     m.addpath('.\src\Temp_extraction', nargout=0)
     m.addpath('.\src\preprocessing', nargout=0)
@@ -68,13 +70,15 @@ def temp_feature_maps(dataset):
             retrieve_dir = dataset + "/" + folder_name + "/" + image
             temp_map = m.temp_segmentation(retrieve_dir)
             temp_map = np.array(temp_map)
-            temp_map = cv2.resize(temp_map, (224,224))
+            temp_map = cv2.resize(temp_map, (224, 224))
             list_of_inpainted_temp_map.append(temp_map)
+        labels_list.append(folder_name)
+        labels.append([folder_name] * (len(img_list)))
 
-    return np.array(list_of_inpainted_temp_map)
+    return np.array(list_of_inpainted_temp_map), labels_list, labels
 
 
-def rgb_msx_feature_map(model, model_name, counter):
+def rgb_msx_feature_map(model, model_name, feature_map, counter):
 
     """
 
@@ -90,7 +94,8 @@ def rgb_msx_feature_map(model, model_name, counter):
 
     feature_map = Model(model.input,
                         model.layers[-2].output)
-    feature_map.save("./feature_maps/" + model_name + "_" + str(counter) + ".h5")
+    feature_map.save("./feature_maps/" + model_name + "_" + str(counter) + "_" + str(feature_map) +
+                     ".h5")
 
     return feature_map
 

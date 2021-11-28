@@ -7,13 +7,14 @@ m = matlab.engine.start_matlab()
 m.addpath('.\src\preprocessing', nargout=0)
 
 
-def batch_data_preprocessing(dataset):
+def batch_data_preprocessing(dataset, feature_map):
     """
 
     Function to return an list of inpainted images
 
-    :param dataset: Folder with class name and all the pre-segmentation images containing RGB
-    and themral images
+    :param feature_map: Feature map to be pre-processed
+    :param dataset: Folder with class name and all the pre-segmentation images containing RGB/MSX
+    and thermal images
 
     :return: list of inpainted images in an array form
 
@@ -25,8 +26,6 @@ def batch_data_preprocessing(dataset):
 
     data_dir_list = os.listdir(dataset)
     for folder_name in data_dir_list:
-        counter = 1
-        path_folder = "./" + "data" + "/" + "processed" + "/" + "Preprocessed_RGB" + "/"
         img_list = os.listdir(dataset + '/' + folder_name)
         for idx in range(0, len(img_list), 2):
             rgb_image_idx = img_list[idx]
@@ -35,23 +34,16 @@ def batch_data_preprocessing(dataset):
             thermal_image_path = dataset + "/" + folder_name + "/" + thermal_image_idx
             thermal_image = m.imread(thermal_image_path)
             rgb_image = m.imread(rgb_image_path)
-            RGB, mask = m.segmentation(thermal_image, rgb_image, nargout=2)
+            if feature_map == "RGB":
+                RGB, mask = m.segmentation(thermal_image, rgb_image, nargout=2)
+            elif feature_map == "MSX":
+                RGB, mask = m.segmentation(rgb_image, thermal_image, nargout=2)
             RGB = np.array(RGB)
             RGB = RGB.astype('uint8')
             mask = np.array(mask)
             mask = mask.astype('uint8')
             inpainted_image = cv2.inpaint(RGB, mask, 3, cv2.INPAINT_TELEA)
             inpainted_image = cv2.resize(inpainted_image, (224, 224))
-            if os.path.exists(path_folder):
-                if os.path.exists(path_folder + "/" + str(folder_name)):
-
-                    image_name = path_folder + "/" + str(folder_name) + "/" + str(folder_name) + "_" + str(counter) + ".jpg"
-                    plt.imsave(image_name, inpainted_image)
-                    counter = counter + 1
-                else:
-                    os.mkdir(path_folder + "/" + str(folder_name))
-            else:
-                os.mkdir(path_folder)
             list_of_inpainted_images.append(inpainted_image)
         labels_list.append(folder_name)
         labels.append([folder_name] * (len(img_list)//2))
