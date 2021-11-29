@@ -42,7 +42,7 @@ def train_model(model, X_train, y_train, batch_size, num_epochs, X_test, y_test,
     """
 
     filepath = "./models/" + str(model_name) + "_" + str(counter) + "_" + str(feature_map)+ "_model.h5"
-    earlyStopping = EarlyStopping(monitor='val_categorical_accuracy', patience=5, verbose=2,
+    earlyStopping = EarlyStopping(monitor='val_categorical_accuracy', patience=7, verbose=2,
                                   mode='auto')
     checkpoint = ModelCheckpoint(filepath, save_best_only=True, monitor='val_categorical_accuracy',
                                  mode='auto')
@@ -52,7 +52,7 @@ def train_model(model, X_train, y_train, batch_size, num_epochs, X_test, y_test,
                      verbose=2,
                      validation_data=(X_test, y_test), callbacks=callbacks_list)
 
-    (loss, accuracy) = model.evaluate(X_test, y_test, batch_size=batch_size, verbose=1)
+    (loss, accuracy) = model.evaluate(X_test, y_test, batch_size=batch_size, verbose=2)
     print("[INFO] loss={:.4f}, accuracy: {:.4f}%".format(loss, accuracy * 100))
 
     return model, hist, loss, accuracy

@@ -1,10 +1,10 @@
-import matlab.engine
+#import matlab.engine
 import numpy as np
 import os
 import cv2
 import matplotlib.pyplot as plt
-m = matlab.engine.start_matlab()
-m.addpath('.\src\preprocessing', nargout=0)
+#m = matlab.engine.start_matlab()
+#m.addpath('.\src\preprocessing', nargout=0)
 
 
 def batch_data_preprocessing(dataset, feature_map):

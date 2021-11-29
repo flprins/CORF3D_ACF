@@ -10,7 +10,10 @@ from src.feature_maps import corf_feature_maps, temp_feature_maps, feature_fusio
 from src.models import Models
 from src.train import train_test_split, train_model, five_cross_validation, leave_one_day_out
 from src.visualizations import plot_data_graph
-from tensorflow import keras
+import tensorflow as tf
+from keras.models import *
+from keras.layers import *
+from keras.engine import Model
 import os
 import numpy as np
 
@@ -41,11 +44,11 @@ if __name__ == '__main__':
     parser.add_argument('--feature_map_2', type=str, choices=["CORF3D", "TEMP3D", "MSX"],
                         default="", required=False,
                         help='Which Feature map 2 you are using.')
-    parser.add_argument('--dataset_1', type=str, default="./data/interim/pre-segmentation-RGB",
+    parser.add_argument('--dataset_1', type=str, default="./data/Preprocessed_RGB",
                         required=False,
                         help='Dataset 1 you are using.')
     parser.add_argument('--dataset_2', type=str,
-                        default="./data/interim/pre-segmentation-MSX",
+                        default="./data/CORF3D",
                         required=False,
                         help='Dataset 2 you are using.')
     parser.add_argument('--timestamp', type=str, default="./data/timestamp.xlsx",
@@ -75,14 +78,14 @@ if __name__ == '__main__':
     #     parser.error('Please enter only one dataset')
     # if args.mode != "single" and not args.preprocessing:
     #     parser.error('Please enter both the datasets')
-    if args.dataset_1 and not args.preprocessing:
-        for f in os.listdir(args.dataset_1):
-            name, ext = os.path.splitext(f)
-            if ext == '.npy':
-                parser.error('Please select folder with RGB or MSX images')
-
+#    if args.dataset_1 and not args.preprocessing:
+#        for f in os.listdir(args.dataset_1):
+#            name, ext = os.path.splitext(f)
+#            if ext == '.npy':
+#                parser.error('Please select folder with RGB or MSX images')
+    np.random.seed(7)
     if args.preprocessing:
-        print("entered 1")
+        
         if args.feature_map_1 == "RGB" and args.feature_map_2 == "CORF3D" and args.mode == "fusion":
 
             dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1,
@@ -106,7 +109,7 @@ if __name__ == '__main__':
                                       temp_feature_set_norm_1)
 
         elif args.feature_map_1 == "RGB" and args.feature_map_2 == "MSX" and args.mode == "fusion":
-            print("entered 2")
+
             dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1,
                                                                       args.feature_map_1)
             dataset_2, labels, labels_list = batch_data_preprocessing(args.dataset_2,
@@ -137,24 +140,26 @@ if __name__ == '__main__':
         binarizelabels = binarize_labels(labels)
 
     else:
+        print("No Preprocessing")
+        
+        if args.feature_map_1 == "RGB" and args.feature_map_2 == "CORF3D" and args.mode == "fusion":
+            
+            dataset_1, labels, labels_list = load_images(args.dataset_1, 224)
+            dataset_2, labels, labels_list = load_feature_maps(args.dataset_2, 224)
+            
+        elif args.feature_map_1 and args.mode == "single":
 
-        if args.feature_map_1 and args.feature_map_2 == "MSX":
+            dataset_1, labels, labels_list = load_images(args.dataset_1, 224)
+
+        elif args.feature_map_2 == "CORF3D" or "TEMP3D" and args.mode == "single":
+
+            dataset_1, labels, labels_list = load_feature_maps(args.dataset_2, 224)
+
+        elif args.feature_map_1 == "RGB" and args.feature_map_2 == "MSX" and args.mode == "fusion":
 
             dataset_1, labels, labels_list = load_images(args.dataset_1, 224)
             dataset_2, labels, labels_list = load_images(args.dataset_2, 224)
 
-        elif args.feature_map_1:
-
-            dataset_1, labels, labels_list = load_images(args.dataset_1, 224)
-
-        elif args.feature_map_2 == "CORF3D" or "TEMP3D":
-
-            dataset_1, labels, labels_list = load_feature_maps(args.dataset_2, 224)
-
-        elif args.feature_map_1 and args.feature_map_2 == "CORF3D" or "TEMP3D":
-
-            dataset_1, labels, labels_list = load_images(args.dataset_1, 224)
-            dataset_2, labels, labels_list = load_feature_maps(args.dataset_2, 224)
 
         binarizelabels = binarize_labels(labels)
 
@@ -196,7 +201,7 @@ if __name__ == '__main__':
                                                           args.num_epochs, X_test, y_test,
                                                           args.model, counter)
 
-                plot_data_graph(hist, args.num_epochs, counter, args.model)
+                plot_data_graph(hist, args.num_epochs, counter, args.model, args.feature_map_1)
                 pred = model_predictions(model, X_test)
                 printWrongPredictions(pred, y_test, labels)
                 counter = counter + 1
@@ -206,6 +211,7 @@ if __name__ == '__main__':
         if args.mode == "fusion":
 
             for i in range(0, len(X_train_index)):
+                print("Entered 5 fold fusion")
                 X_train_1, X_test_1 = dataset_1[X_train_index[i]], dataset_1[X_test_index[i]]
                 y_train_1, y_test_1 = binarizelabels[y_train_index[i]], binarizelabels[y_test_index[i]]
 
@@ -224,14 +230,14 @@ if __name__ == '__main__':
                                                                   y_test_2, args.model, counter,
                                                                   args.feature_map_2)
 
-                plot_data_graph(hist_1, args.num_epochs, counter, args.model)
+                plot_data_graph(hist_1, args.num_epochs, counter, args.model, args.feature_map_1)
                 pred_1 = model_predictions(model_1, X_test_1)
                 print("Wrong predictions of model 1")
                 printWrongPredictions(pred_1, y_test_1, labels)
                 all_fold_accuracy_1.append(accuracy_1 * 100)
                 all_fold_loss_1.append(loss_1)
 
-                plot_data_graph(hist_2, args.num_epochs, counter, args.model)
+                plot_data_graph(hist_2, args.num_epochs, counter, args.model, args.feature_map_2)
                 pred_2 = model_predictions(model_2, X_test_2)
                 print(" Wrong predictions of model 2")
                 printWrongPredictions(pred_2, y_test_2, labels)
@@ -243,16 +249,17 @@ if __name__ == '__main__':
                 y_test = np.argmax(y_test_1, axis=1)
 
                 # Load models
-                filepath_1 = "./models/" + str(args.model_name) + "_" + str(counter) + "_" + \
+                filepath_1 = "./models/" + str(args.model) + "_" + str(counter) + "_" + \
                            str(args.feature_map_1) + "_model.h5"
-                filepath_2 = "./models/" + str(args.model_name) + "_" + str(counter) + "_" + \
+                filepath_2 = "./models/" + str(args.model) + "_" + str(counter) + "_" + \
                              str(args.feature_map_2) + "_model.h5"
-                trained_model_1 = keras.models.load_model(filepath_1)
-                trained_model_2 = keras.models.load_model(filepath_2)
-
+                             
+                trained_model_1 = load_model(filepath_1)
+                trained_model_2 = load_model(filepath_2)
+                
                 # Extract features
-                model_1_feature_map = rgb_msx_feature_map(trained_model_1, args.model, counter)
-                model_2_feature_map = rgb_msx_feature_map(trained_model_2, args.model, counter)
+                model_1_feature_map = Model(trained_model_1.input, trained_model_1.layers[-2].output)
+                model_2_feature_map = Model(trained_model_2.input, trained_model_2.layers[-2].output)
 
                 features_train_1 = model_1_feature_map.predict(X_train_1)
                 features_test_1 = model_1_feature_map.predict(X_test_1)
@@ -291,9 +298,8 @@ if __name__ == '__main__':
                                                           args.num_epochs, X_test, y_test,
                                                           args.model, counter)
 
-                plot_data_graph(hist, args.num_epochs, counter, args.model)
+                plot_data_graph(hist, args.num_epochs, counter, args.model, args.feature_map_1)
                 pred = model_predictions(model, X_test)
-                printWrongPredictions(pred, y_test, labels)
                 counter = counter + 1
                 all_fold_accuracy.append(accuracy * 100)
                 all_fold_loss.append(loss)
@@ -319,22 +325,37 @@ if __name__ == '__main__':
                                                                   args.num_epochs, X_test_2,
                                                                   y_test_2, args.model, counter,
                                                                   args.feature_map_2)
+                
+                plot_data_graph(hist_1, args.num_epochs, counter, args.model, args.feature_map_1)
+                pred_1 = model_predictions(model_1, X_test_1)
+                #print("Wrong predictions of model 1")
+                #printWrongPredictions(pred_1, y_test_1, labels)
+                all_fold_accuracy_1.append(accuracy_1 * 100)
+                all_fold_loss_1.append(loss_1)
+
+                plot_data_graph(hist_2, args.num_epochs, counter, args.model, args.feature_map_2)
+                pred_2 = model_predictions(model_2, X_test_2)
+                #print(" Wrong predictions of model 2")
+                #printWrongPredictions(pred_2, y_test_2, labels)
+                all_fold_accuracy_2.append(accuracy_2 * 100)
+                all_fold_loss_2.append(loss_2)
 
                 # Convert to single column
                 y_train = np.argmax(y_train_1, axis=1)
                 y_test = np.argmax(y_test_1, axis=1)
 
                 # Load models
-                filepath_1 = "./models/" + str(args.model_name) + "_" + str(counter) + "_" + \
-                             str(args.feature_map_1) + "_model.h5"
-                filepath_2 = "./models/" + str(args.model_name) + "_" + str(counter) + "_" + \
+                filepath_1 = "./models/" + str(args.model) + "_" + str(counter) + "_" + \
+                           str(args.feature_map_1) + "_model.h5"
+                filepath_2 = "./models/" + str(args.model) + "_" + str(counter) + "_" + \
                              str(args.feature_map_2) + "_model.h5"
-                trained_model_1 = keras.models.load_model(filepath_1)
-                trained_model_2 = keras.models.load_model(filepath_2)
-
+                             
+                trained_model_1 = load_model(filepath_1)
+                trained_model_2 = load_model(filepath_2)
+                
                 # Extract features
-                model_1_feature_map = rgb_msx_feature_map(trained_model_1, args.model, counter)
-                model_2_feature_map = rgb_msx_feature_map(trained_model_2, args.model, counter)
+                model_1_feature_map = Model(trained_model_1.input, trained_model_1.layers[-2].output)
+                model_2_feature_map = Model(trained_model_2.input, trained_model_2.layers[-2].output)
 
                 features_train_1 = model_1_feature_map.predict(X_train_1)
                 features_test_1 = model_1_feature_map.predict(X_test_1)

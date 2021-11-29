@@ -98,7 +98,9 @@ class Models(object):
             learning_rate,
             beta1: float = 0.9,
             beta2: float = 0.999,
-            epsilon: float = 1e-8,
+            epsilon: float = 1e-20,
+				    decay: float = 0.0000001,
+            amsgrad = False
     ):
         """
 
@@ -112,7 +114,7 @@ class Models(object):
 
         """
 
-        adam = Adam(lr=learning_rate, beta_1=beta1, beta_2=beta2, epsilon=epsilon)
+        adam = Adam(lr=learning_rate, beta_1=beta1, beta_2=beta2, epsilon=epsilon, decay=decay, amsgrad=amsgrad)
         self.model_out.compile(
             loss="categorical_crossentropy",
             optimizer=adam,

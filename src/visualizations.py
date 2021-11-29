@@ -62,7 +62,7 @@ def tsne(images, labels):
     return tsne_result_scaled, float_labels
 
 
-def plot_data_graph(hist, num_epochs, counter, model_name):
+def plot_data_graph(hist, num_epochs, counter, model_name, feature_map):
 
     """
 
@@ -80,7 +80,7 @@ def plot_data_graph(hist, num_epochs, counter, model_name):
     val_loss = hist.history['val_loss']
     train_acc = hist.history['categorical_accuracy']
     val_acc = hist.history['val_categorical_accuracy']
-    xc = range(num_epochs)
+    xc = range(1, len(train_acc) + 1)
 
     plt.figure(figsize=(12, 10))
     plt.plot(xc, train_loss)
@@ -90,7 +90,7 @@ def plot_data_graph(hist, num_epochs, counter, model_name):
     plt.title('train_loss vs val_loss')
     plt.grid(True)
     plt.legend(['train', 'val'])
-    plt.savefig("./plots/" + str(model_name) + "_" + str(counter) + "_loss")
+    plt.savefig("./plots/" + str(model_name) + "_" + str(counter) + "_" + str(feature_map) + "_loss")
 
     plt.figure(figsize=(12, 10))
     plt.plot(xc, train_acc)
@@ -100,4 +100,4 @@ def plot_data_graph(hist, num_epochs, counter, model_name):
     plt.title('train_acc vs val_acc')
     plt.grid(True)
     plt.legend(['train', 'val'])
-    plt.savefig("./plots/" + str(model_name) + "_" + str(counter) + "_acc")
+    plt.savefig("./plots/" + str(model_name) + "_" + str(counter)  + "_" + str(feature_map) + "_acc")
