@@ -170,6 +170,7 @@ if __name__ == '__main__':
     all_fold_loss_1 = []
     all_fold_accuracy_2 = []
     all_fold_loss_2 = []
+    all_fold_svm_accuracy = []
     counter = 1
     model = Models(args.trainable, args.classes, args.pretrained_dataset, args.include_top,
                    args.learning_rate)
@@ -202,8 +203,6 @@ if __name__ == '__main__':
                                                           args.model, counter)
 
                 plot_data_graph(hist, args.num_epochs, counter, args.model, args.feature_map_1)
-                pred = model_predictions(model, X_test)
-                printWrongPredictions(pred, y_test, labels)
                 counter = counter + 1
                 all_fold_accuracy.append(accuracy * 100)
                 all_fold_loss.append(loss)
@@ -211,7 +210,7 @@ if __name__ == '__main__':
         if args.mode == "fusion":
 
             for i in range(0, len(X_train_index)):
-                print("Entered 5 fold fusion")
+
                 X_train_1, X_test_1 = dataset_1[X_train_index[i]], dataset_1[X_test_index[i]]
                 y_train_1, y_test_1 = binarizelabels[y_train_index[i]], binarizelabels[y_test_index[i]]
 
@@ -231,16 +230,10 @@ if __name__ == '__main__':
                                                                   args.feature_map_2)
 
                 plot_data_graph(hist_1, args.num_epochs, counter, args.model, args.feature_map_1)
-                pred_1 = model_predictions(model_1, X_test_1)
-                print("Wrong predictions of model 1")
-                printWrongPredictions(pred_1, y_test_1, labels)
                 all_fold_accuracy_1.append(accuracy_1 * 100)
                 all_fold_loss_1.append(loss_1)
 
                 plot_data_graph(hist_2, args.num_epochs, counter, args.model, args.feature_map_2)
-                pred_2 = model_predictions(model_2, X_test_2)
-                print(" Wrong predictions of model 2")
-                printWrongPredictions(pred_2, y_test_2, labels)
                 all_fold_accuracy_2.append(accuracy_2 * 100)
                 all_fold_loss_2.append(loss_2)
 
@@ -277,9 +270,16 @@ if __name__ == '__main__':
                 # Test the model
                 y_pred = clf.predict(combined_feature_test)
 
-                print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
+                svm_accuracy = metrics.accuracy_score(y_test, y_pred)
+                
+                print("Model + SVM accuracy:",svm_accuracy)
+                
+                all_fold_svm_accuracy.append(svm_accuracy*100)
 
                 counter = counter + 1
+            
+            print("Average accuracy of Model + SVM:", np.mean(all_fold_svm_accuracy))
+            print("Std accuracy of Model + SVM:", np.std(all_fold_svm_accuracy))
 
     elif args.method == "leave_one_day_out":
 
@@ -299,7 +299,6 @@ if __name__ == '__main__':
                                                           args.model, counter)
 
                 plot_data_graph(hist, args.num_epochs, counter, args.model, args.feature_map_1)
-                pred = model_predictions(model, X_test)
                 counter = counter + 1
                 all_fold_accuracy.append(accuracy * 100)
                 all_fold_loss.append(loss)
@@ -327,16 +326,10 @@ if __name__ == '__main__':
                                                                   args.feature_map_2)
                 
                 plot_data_graph(hist_1, args.num_epochs, counter, args.model, args.feature_map_1)
-                pred_1 = model_predictions(model_1, X_test_1)
-                #print("Wrong predictions of model 1")
-                #printWrongPredictions(pred_1, y_test_1, labels)
                 all_fold_accuracy_1.append(accuracy_1 * 100)
                 all_fold_loss_1.append(loss_1)
 
                 plot_data_graph(hist_2, args.num_epochs, counter, args.model, args.feature_map_2)
-                pred_2 = model_predictions(model_2, X_test_2)
-                #print(" Wrong predictions of model 2")
-                #printWrongPredictions(pred_2, y_test_2, labels)
                 all_fold_accuracy_2.append(accuracy_2 * 100)
                 all_fold_loss_2.append(loss_2)
 
@@ -372,7 +365,14 @@ if __name__ == '__main__':
 
                 # Test the model
                 y_pred = clf.predict(combined_feature_test)
-
-                print("Accuracy:", metrics.accuracy_score(y_test, y_pred))
+                
+                svm_accuracy = metrics.accuracy_score(y_test, y_pred)
+                
+                print("Model + SVM accuracy:",svm_accuracy)
+                
+                all_fold_svm_accuracy.append(svm_accuracy*100)
 
                 counter = counter + 1
+            
+            print("Average accuracy of Model + SVM:", np.mean(all_fold_svm_accuracy))
+            print("Std accuracy of Model + SVM:", np.std(all_fold_svm_accuracy))
