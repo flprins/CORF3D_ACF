@@ -1,11 +1,11 @@
-#import matlab.engine
+import matlab.engine
 import numpy as np
 import os
 import cv2
 from keras import Model
 from sklearn import preprocessing
 
-#m = matlab.engine.start_matlab()
+m = matlab.engine.start_matlab()
 
 
 def corf_feature_maps(dataset, sigma, beta, inhibitionFactor, highthresh):
@@ -29,16 +29,16 @@ def corf_feature_maps(dataset, sigma, beta, inhibitionFactor, highthresh):
 
     list_of_image_paths = []
 
-    #m.addpath('.\src\CORFpushpull', nargout=0)
+    m.addpath('.\src\CORFpushpull', nargout=0)
 
     data_dir_list = os.listdir(dataset)
     for folder_name in data_dir_list:
         img_list = os.listdir(dataset + '/' + folder_name)
         for image in img_list:
             retrieve_dir = dataset + "/" + folder_name + "/" + image
-            #images = m.imread(retrieve_dir)
-            #binarymap, corfresponse = m.CORFContourDetection(images, sigma, beta, inhibitionFactor,
-            #                                                 highthresh, nargout=2)
+            images = m.imread(retrieve_dir)
+            binarymap, corfresponse = m.CORFContourDetection(images, sigma, beta, inhibitionFactor,
+                                                             highthresh, nargout=2)
             list_of_image_paths.append(corfresponse)
 
     return np.array(list_of_image_paths)
@@ -60,15 +60,15 @@ def temp_feature_maps(dataset):
     labels = []
     labels_list = []
 
-    #m.addpath('.\src\Temp_extraction', nargout=0)
-    #m.addpath('.\src\preprocessing', nargout=0)
+    m.addpath('.\src\Temp_extraction', nargout=0)
+    m.addpath('.\src\Preprocessing', nargout=0)
 
     data_dir_list = os.listdir(dataset)
     for folder_name in data_dir_list:
         img_list = os.listdir(dataset + '/' + folder_name)
         for image in img_list:
             retrieve_dir = dataset + "/" + folder_name + "/" + image
-            #temp_map = m.temp_segmentation(retrieve_dir)
+            temp_map = m.temp_segmentation(retrieve_dir)
             temp_map = np.array(temp_map)
             temp_map = cv2.resize(temp_map, (224, 224))
             list_of_inpainted_temp_map.append(temp_map)
