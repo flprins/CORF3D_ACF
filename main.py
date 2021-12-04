@@ -44,11 +44,11 @@ if __name__ == '__main__':
     parser.add_argument('--feature_map_2', type=str, choices=["CORF3D", "TEMP3D", "MSX"],
                         default="", required=False,
                         help='Which Feature map 2 you are using.')
-    parser.add_argument('--dataset_1', type=str, default="./data/Raw/Thermal",
+    parser.add_argument('--dataset_1', type=str, default="",
                         required=False,
                         help='Dataset 1 you are using.')
     parser.add_argument('--dataset_2', type=str,
-                        default="./data/Raw/RGB",
+                        default="",
                         required=False,
                         help='Dataset 2 you are using.')
     parser.add_argument('--preprocessed_dataset', type=str,
