@@ -5,7 +5,8 @@ from sklearn import metrics
 from src.data_load import load_images, binarize_labels, load_feature_maps
 from src.data_preprocessing import batch_data_preprocessing
 from src.evaluation import model_predictions, printWrongPredictions
-from src.feature_maps import corf_feature_maps, temp_feature_maps, feature_fusion, feature_stack
+from src.feature_maps import corf_feature_maps, temp_feature_maps, feature_fusion, \
+    feature_stack, feature_normalization
 from src.models import Models
 from src.train import train_test_split, train_model, five_cross_validation, leave_one_day_out
 from src.visualizations import plot_data_graph
@@ -80,28 +81,28 @@ if __name__ == '__main__':
     if args.preprocessing:
 
         if args.feature_map_1 == "RGB" and args.feature_map_2 == "CORF3D" and args.mode == "fusion":
-            from src.feature_maps import normalization
+
             dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1,
                                                                       args.dataset_2,
                                                                       args.preprocessed_dataset,
                                                                       args.feature_map_1)
             corf_feature_set_1 = corf_feature_maps(args.preprocessed_dataset, 2.2, 4, 0.0, 0.005)
-            corf_feature_set_norm_1 = normalization(corf_feature_set_1)
+            corf_feature_set_norm_1 = feature_normalization(corf_feature_set_1)
             corf_feature_set_2 = corf_feature_maps(args.preprocessed_dataset, 2.2, 4, 1.8, 0.005)
-            corf_feature_set_norm_2 = normalization(corf_feature_set_2)
+            corf_feature_set_norm_2 = feature_normalization(corf_feature_set_2)
             corf_feature_set_3 = corf_feature_maps(args.preprocessed_dataset, 2.2, 4, 3.6, 0.005)
-            corf_feature_set_norm_3 = normalization(corf_feature_set_3)
+            corf_feature_set_norm_3 = feature_normalization(corf_feature_set_3)
             dataset_2 = feature_stack(corf_feature_set_norm_1, corf_feature_set_norm_2,
                                       corf_feature_set_norm_3)
 
         elif args.feature_map_1 == "RGB" and args.feature_map_2 == "TEMP3D" and args.mode == "fusion":
-            from src.feature_maps import normalization
+
             dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1,
                                                                       args.dataset_2,
                                                                       args.preprocessed_dataset,
                                                                       args.feature_map_1)
             temp_feature_set_1 = temp_feature_maps(args.dataset_2)
-            temp_feature_set_norm_1 = normalization(temp_feature_set_1)
+            temp_feature_set_norm_1 = feature_normalization(temp_feature_set_1)
             dataset_2 = feature_stack(temp_feature_set_norm_1, temp_feature_set_norm_1,
                                       temp_feature_set_norm_1)
 
@@ -124,20 +125,20 @@ if __name__ == '__main__':
                                                                       args.feature_map_1)
 
         elif args.feature_map_2 == "TEMP3D" and args.mode == "single":
-            from src.feature_maps import normalization
+
             temp_feature_set_1, labels_list, labels = temp_feature_maps(args.dataset_2)
-            temp_feature_set_norm_1 = normalization(temp_feature_set_1)
+            temp_feature_set_norm_1 = feature_normalization(temp_feature_set_1)
             dataset_1 = feature_stack(temp_feature_set_norm_1, temp_feature_set_norm_1,
                                       temp_feature_set_norm_1)
 
         elif args.feature_map_2 == "CORF3D" and args.mode == "single":
-            from src.feature_maps import normalization
+
             corf_feature_set_1 = corf_feature_maps(args.preprocessed_dataset, 2.2, 4, 0, 0.005)
-            corf_feature_set_norm_1 = normalization(corf_feature_set_1)
+            corf_feature_set_norm_1 = feature_normalization(corf_feature_set_1)
             corf_feature_set_2 = corf_feature_maps(args.preprocessed_dataset, 2.2, 4, 1.8, 0.005)
-            corf_feature_set_norm_2 = normalization(corf_feature_set_2)
+            corf_feature_set_norm_2 = feature_normalization(corf_feature_set_2)
             corf_feature_set_3 = corf_feature_maps(args.preprocessed_dataset, 2.2, 4, 3.6, 0.005)
-            corf_feature_set_norm_3 = normalization(corf_feature_set_3)
+            corf_feature_set_norm_3 = feature_normalization(corf_feature_set_3)
             corf_feature_set = feature_stack(corf_feature_set_norm_1, corf_feature_set_norm_2,
                                              corf_feature_set_norm_3)
 

@@ -16,6 +16,7 @@ else
     frame = frame;
 end
 
+% Thresholding
 [r,c] = size(frame);
 for i = 1:r
     for j = 1:c
@@ -27,7 +28,7 @@ for i = 1:r
     end
 end
 
-
+% Close and extract maximum area
 BWsdil = imclose(imclose(frame,strel('line',18,0)),strel('line',18,90));
 reg = regionprops(imbinarize(BWsdil));
 bw = bwlabel(BWsdil);
@@ -37,7 +38,7 @@ fuse1 = imoverlay(R, ~B, 'black');
 fuse2 = imoverlay(B, imbinarize(frame),'black');
 fuse2 = rgb2gray(fuse2);
 
-% Smoothen out the edges of mask 320*240
+% Smoothen out the edges of mask
 windowSize = 9;
 kernel = ones(windowSize) / windowSize ^ 2;
 blurryImage = conv2(single(fuse2), kernel, 'same');

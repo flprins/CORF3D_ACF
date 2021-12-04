@@ -2,7 +2,6 @@ import matlab.engine
 import numpy as np
 import os
 import cv2
-from keras import Model
 from sklearn import preprocessing
 
 m = matlab.engine.start_matlab()
@@ -78,28 +77,7 @@ def temp_feature_maps(dataset):
     return np.array(list_of_inpainted_temp_map), labels_list, labels
 
 
-def rgb_msx_feature_map(model, model_name, feature_map, counter):
-
-    """
-
-      Function to return an models feature maps
-
-      :param model_name: Name of the trained model
-      :param model: Trained Convolutional neural network model
-      :param counter: Number of folds
-
-      :return: List of the response map of the temperature in an array form
-
-    """
-
-    feature_map = Model(model.input, model.layers[-1].output)
-    feature_map.save("./feature_maps/" + model_name + "_" + str(counter) + "_" + str(feature_map) +
-                     ".h5")
-
-    return feature_map
-
-
-def normalization(feature_maps):
+def feature_normalization(feature_maps):
 
     """
 

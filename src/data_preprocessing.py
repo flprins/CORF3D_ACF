@@ -9,15 +9,19 @@ m.addpath('.\src\Temp_extraction', nargout=0)
 
 
 def batch_data_preprocessing(dataset_1, dataset_2, dataset_3, feature_map):
+
     """
 
     Function to return an list of inpainted images
 
+    :param dataset_3: Path to the folder where the preprocessed images need to be stored
+    :param dataset_2: Folder with class name and RGB/MSX images
+    :param dataset_1: Folder with class name and Thermal images
     :param feature_map: Feature map to be pre-processed
     :param dataset: Folder with class name and all the pre-segmentation images containing RGB/MSX
     and thermal images
 
-    :return: list of inpainted images in an array form
+    :return: list of inpainted images in an array form and labels
 
     """
 
