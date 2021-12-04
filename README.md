@@ -2,6 +2,7 @@
 
 This respository contains code for the project "CORF3D contour maps with application to Holstein cattle recognition using RGB and thermal images"
 
+If you have any questions on this repository or the related paper, feel free to [create an issue](https://github.com/ameybhole/CORF3D_HCR/issues/new) or [send me an email](amey.bhole77@gmail.com).
 #### Summary
 
 * [Introduction](#Introduction)
@@ -43,20 +44,39 @@ Install requirements:
 $ pip install -r requirements.txt
 ```
 
+Install MATLAB Engine API for Python:
+
+```bash
+$ cd "matlabroot\extern\engines\python"
+$ python setup.py install
+```
+For more information regarding MATLAB Engine installation please visit [here](https://www.mathworks.com/help/matlab/matlab_external/install-the-matlab-engine-for-python.html)
+
 ## Dataset
 
-The pre-processing steps used were based on the following paper:
+You can download the datasets [here](https://dataverse.nl/dataset.xhtml?persistentId=doi:10.34894/7M108F)
 
-[A. Bhole, O. Falzon, M. Biehl, G. Azzopardi, “A Computer Vision Pipeline that Uses Thermal and RGB Images for the Recognition of Holstein Cattle”, Computer Analysis of Images and Patterns (CAIP), pp. 108-119, 2019](https://link.springer.com/chapter/10.1007/978-3-030-29891-3_10)
+We advise you to structure the data in the following way:
 
-Github link to the code for the above paper: 
-
-- Link: https://github.com/ameybhole/IIHC
+```
+.
+├── data                       # datasets used for the project 
+|   ├── Raw                    # Folder with raw datasets
+|   |   ├── RGB                # Folder with raw RGB images
+|   |   ├── Thermal            # Folder with raw Thermal images 
+|   ├── Preprocessed           # Folder with Preprocessed datasets
+|   |   ├── RGB                # Folder with preprocessed RGB images
+|   |   ├── CORF3D             # Folder with preprocessed CORF3D .npy files 
+|   |   ├── TEMP3D             # Folder with preprocessed TEMP3D .npy files   
+|   |   ├── MSX                # Folder with preprocessed MSX images
+|   └──timestamp.xlsx          # timestamp file
+```
 
 ## Repository Structure
 
 ```
 .
+├── data                       # Folder with all the datasets
 ├── src                        # source code of the project 
 |   ├── CORFpushpull           # source code for CORFpushpull model
 |   ├── Preprocessing          # scripts for segmentation
@@ -73,56 +93,40 @@ Github link to the code for the above paper:
 
 ## Running Experiments
 
-### Train 
+#### Train without preprocessing
+
+##### Leave one day out cross-validation
 
 ```Bash
+python main.py --preprocessing False --method leave_one_day_out --mode fusion --feature_map_1 RGB --feature_map_2 CORF3D --dataset_1 [path to dataset 1] --dataset_2 [path to dataset 2] --num_epochs 15 --resize 224 --batch_size 32 --classes 383 --trainable True --include_top False --model densenet121 
+```
+##### 5-fold cross-validation
 
+```Bash
+python main.py --preprocessing False --method 5_fold --mode fusion --feature_map_1 RGB --feature_map_2 CORF3D --dataset_1 [path to dataset 1] --dataset_2 [path to dataset 2] --num_epochs 15 --resize 224 --batch_size 32 --classes 383 --trainable True --include_top False --learning_rate 0.0005 --model densenet121 
+```
+
+#### Train with preprocessing
+
+##### Leave one day out cross-validation
+
+```Bash
+python main.py --preprocessing True --method leave_one_day_out --mode fusion --feature_map_1 RGB --feature_map_2 CORF3D --dataset_1 [path to dataset 1] --dataset_2 [path to dataset 2] --num_epochs 15 --resize 224 --batch_size 32 --classes 383 --trainable True --include_top False --model densenet121 
+```
+##### 5-fold cross-validation
+
+```Bash
+python main.py --preprocessing True --method 5_fold --mode fusion --feature_map_1 RGB --feature_map_2 CORF3D --dataset_1 [path to dataset 1] --dataset_2 [path to dataset 2] --num_epochs 15 --resize 224 --batch_size 32 --classes 383 --trainable True --include_top False --learning_rate 0.0005 --model densenet121 
 ```
 
 ## Performance
 
-#### Average performance of three ConvNets and four feature sets across 5-fold cross-validation
+#### Average performance of the best results achieved across leave-one-day-out and 5-fold cross-validation
 
-| __Model__ | __Feature set__ | __Test accuracy__ (\%) | __F1__ (\%) |
-|:--------------:|:--------------------:|:---------------------------:|:----------------:|
-| MobileNet      | RGB                  | 98.18 ± 0.28            | 97.75 ± 0.25 |
-|                | MSX                  | 97.04 ± 0.37            | 96.88 ± 0.42 |
-|                | Temp3D               | 50.71 ± 1.34            | 50.15 ± 1.24 |
-|                | CORF3D               | 99.16 ± 0.21            | 99.08 ± 0.18 |
-| DenseNet121    | RGB                  | 98.56 ± 0.28            | 98.51 ± 0.30 |
-|                | MSX                  | 95.38 ± 0.69            | 95.34 ± 0.55 |
-|                | Temp3D               | 13.12 ± 4.23            | 6.95 ± 4.56   |
-|                | CORF3D               | 97.88 ± 0.27            | 98.27 ± 0.25  |
-| Xception       | RGB                  | 98.36 ± 0.28            | 98.34 ± 0.24  |
-|                | MSX                  | 98.36 ± 0.28            | 98.37 ± 0.36 |
-|                | Temp3D               | 9.38 ± 2.34             | 6.01 ± 3.68  |
-|                | CORF3D               | 98.86 ± 0.31            | 98.75 ± 0.35  |
-
-
-#### Average performance of different fusions of feature sets across 5-fold cross-validation
-
-| __Model__             | __Feature set__           | __Test accuracy__ (\%) | __F1__ (\%)}          |
-|:--------------------------:|:------------------------------:|:---------------------------:|:-------------------------:|
-| MobileNet + SVM            | RGB + MSX                      | 98.68 ± 0.35            | 98.48 ± 0.38          |
-|                            | RGB + CORF3D                   | 99.19 ± 0.11            | 99.11 ± 0.15          |
-| __DenseNet121 + SVM__      | RGB + MSX                      | 99.00 ± 0.41            | 98.96 ± 0.48          |
-|                            | __RGB + CORF3D__               | __99.64 ± 0.13__        | __99.54 ± 0.16__      |
-| Xception + SVM             | RGB + MSX                      | 98.1 ±  0.14            | 98.08 ± 0.18          |
-|                            | RGB + CORF3D                   | 99.29 ± 0.37            | 99.24 ± 0.33          |
-
-#### Average performance of different feature sets and models across a leave-one-day-out cross-validation
-
-| __Model__             | __Feature set__  | __Test accuracy__ (\%) | __F1__ (\%)          |
-|:--------------------------:|:---------------------:|:---------------------------:|:-------------------------:|
-| MobileNet                  | RGB                   | 98.01 ± 0.39            | 98.08 ± 0.45          |
-| MobileNet                  | CORF3D                | 98.43 ± 0.47            | 99.55 ± 0.26          |
-| MobileNet + SVM            | RGB + CORF3D          | 99.64 ± 0.40            | 99.44 ± 0.42          |
-| DenseNet121                | RGB                   | 98.86 ± 0.45            | 98.75 ± 0.43          |
-| DenseNet121                | CORF3D                | 98.85 ± 0.39            | 98.76 ± 0.50          |
-| __DenseNet121 + SVM__      | __RGB + CORF3D__      | __99.71 ± 0.30__        | __99.68 ± 0.30__      |
-| Xception                   | RGB                   | 98.46 ± 0.64            | 98.66 ± 0.28          |
-| Xception                   | CORF3D                | 98.60 ± 0.53            | 98.59 ± 0.26          |
-| Xception + SVM             | RGB + CORF3D          | 99.15 ± 0.35            | 99.21 ± 0.33          |
+| __Model__             | __Feature set__  | __Test accuracy__ (\%) | __F1__ (\%)          | __Method__ |
+|:--------------------------:|:---------------------:|:---------------------------:|:-------------------------:|:-------------------------:|
+| __DenseNet121 + SVM__      | __RGB + CORF3D__      | __99.64 ± 0.13__        | __99.54 ± 0.16__      | 5-Fold |
+| __DenseNet121 + SVM__      | __RGB + CORF3D__      | __99.71 ± 0.30__        | __99.68 ± 0.30__      | Leave-one-day-out |
 
 ## Acknowledgment
 
