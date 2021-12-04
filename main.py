@@ -76,16 +76,6 @@ if __name__ == '__main__':
                         help='Your pre-trained classification model of choice')
     args = parser.parse_args()
 
-    # if args.mode != "fusion" and args.dataset_2 and not args.feature_map_2 == "CORF3D" or \
-    #         "TEMP3D" or "MSX":
-    #     parser.error('Please enter only one dataset')
-    # if args.mode != "single" and not args.preprocessing:
-    #     parser.error('Please enter both the datasets')
-    #    if args.dataset_1 and not args.preprocessing:
-    #        for f in os.listdir(args.dataset_1):
-    #            name, ext = os.path.splitext(f)
-    #            if ext == '.npy':
-    #                parser.error('Please select folder with RGB or MSX images')
     np.random.seed(7)
     if args.preprocessing:
 
@@ -107,6 +97,8 @@ if __name__ == '__main__':
         elif args.feature_map_1 == "RGB" and args.feature_map_2 == "TEMP3D" and args.mode == "fusion":
             from src.feature_maps import normalization
             dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1,
+                                                                      args.dataset_2,
+                                                                      args.preprocessed_dataset,
                                                                       args.feature_map_1)
             temp_feature_set_1 = temp_feature_maps(args.dataset_2)
             temp_feature_set_norm_1 = normalization(temp_feature_set_1)
@@ -116,13 +108,19 @@ if __name__ == '__main__':
         elif args.feature_map_1 == "RGB" and args.feature_map_2 == "MSX" and args.mode == "fusion":
 
             dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1,
+                                                                      args.dataset_2,
+                                                                      args.preprocessed_dataset,
                                                                       args.feature_map_1)
-            dataset_2, labels, labels_list = batch_data_preprocessing(args.dataset_2,
+            dataset_2, labels, labels_list = batch_data_preprocessing(args.dataset_1,
+                                                                      args.dataset_2,
+                                                                      args.preprocessed_dataset,
                                                                       args.feature_map_2)
 
         elif args.feature_map_1 == "RGB" or "MSX" and args.mode == "single":
 
             dataset_1, labels, labels_list = batch_data_preprocessing(args.dataset_1,
+                                                                      args.dataset_2,
+                                                                      args.preprocessed_dataset,
                                                                       args.feature_map_1)
 
         elif args.feature_map_2 == "TEMP3D" and args.mode == "single":
@@ -134,11 +132,11 @@ if __name__ == '__main__':
 
         elif args.feature_map_2 == "CORF3D" and args.mode == "single":
             from src.feature_maps import normalization
-            corf_feature_set_1 = corf_feature_maps(args.dataset_2, 2.2, 4, 0, 0.005)
+            corf_feature_set_1 = corf_feature_maps(args.preprocessed_dataset, 2.2, 4, 0, 0.005)
             corf_feature_set_norm_1 = normalization(corf_feature_set_1)
-            corf_feature_set_2 = corf_feature_maps(args.dataset_2, 2.2, 4, 1.8, 0.005)
+            corf_feature_set_2 = corf_feature_maps(args.preprocessed_dataset, 2.2, 4, 1.8, 0.005)
             corf_feature_set_norm_2 = normalization(corf_feature_set_2)
-            corf_feature_set_3 = corf_feature_maps(args.dataset_2, 2.2, 4, 3.6, 0.005)
+            corf_feature_set_3 = corf_feature_maps(args.preprocessed_dataset, 2.2, 4, 3.6, 0.005)
             corf_feature_set_norm_3 = normalization(corf_feature_set_3)
             corf_feature_set = feature_stack(corf_feature_set_norm_1, corf_feature_set_norm_2,
                                              corf_feature_set_norm_3)
@@ -148,12 +146,13 @@ if __name__ == '__main__':
     else:
         print("No Preprocessing")
 
-        if args.feature_map_1 == "RGB" and args.feature_map_2 == "CORF3D" and args.mode == "fusion":
+        if args.feature_map_1 == "RGB" and args.feature_map_2 == "CORF3D" or "TEMP3D" and \
+                args.mode == "fusion":
 
             dataset_1, labels, labels_list = load_images(args.dataset_1, 224)
             dataset_2, labels, labels_list = load_feature_maps(args.dataset_2, 224)
 
-        elif args.feature_map_1 and args.mode == "single":
+        elif args.feature_map_1 == "RGB" or "MSX" and args.mode == "single":
 
             dataset_1, labels, labels_list = load_images(args.dataset_1, 224)
 
@@ -205,12 +204,15 @@ if __name__ == '__main__':
                 model, hist, loss, accuracy = train_model(compiled_model, X_train,
                                                           y_train, args.batch_size,
                                                           args.num_epochs, X_test, y_test,
-                                                          args.model, counter)
+                                                          args.model, counter, args.feature_map_1)
 
                 plot_data_graph(hist, args.num_epochs, counter, args.model, args.feature_map_1)
                 counter = counter + 1
                 all_fold_accuracy.append(accuracy * 100)
                 all_fold_loss.append(loss)
+
+            print("Average accuracy of Model", np.mean(all_fold_accuracy))
+            print("Std accuracy of Model", np.std(all_fold_accuracy))
 
         if args.mode == "fusion":
 
@@ -304,12 +306,15 @@ if __name__ == '__main__':
                 model, hist, loss, accuracy = train_model(compiled_model, X_train,
                                                           y_train, args.batch_size,
                                                           args.num_epochs, X_test, y_test,
-                                                          args.model, counter)
+                                                          args.model, counter, args.feature_map_1)
 
                 plot_data_graph(hist, args.num_epochs, counter, args.model, args.feature_map_1)
                 counter = counter + 1
                 all_fold_accuracy.append(accuracy * 100)
                 all_fold_loss.append(loss)
+
+            print("Average accuracy of Model", np.mean(all_fold_accuracy))
+            print("Std accuracy of Model", np.std(all_fold_accuracy))
 
         if args.mode == "fusion":
 

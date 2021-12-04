@@ -6,6 +6,15 @@ while ~isDone(v)
     [frame, metadata] = step(v);
 end
 frame = imresize(frame, [240 320]);
+string_split = strsplit(T, '_');
+day_no = string_split{2};
+
+if day_no ~= '1'
+    frame = imcrop(frame , [1 70 320 240]);
+    R = imcrop(R, [1 70 320 240]);
+else
+    frame = frame;
+end
 
 [r,c] = size(frame);
 for i = 1:r
@@ -24,7 +33,6 @@ reg = regionprops(imbinarize(BWsdil));
 bw = bwlabel(BWsdil);
 [mx,mxind] = max([reg.Area]);
 B = double(bw == mxind);
-
 fuse1 = imoverlay(R, ~B, 'black');
 fuse2 = imoverlay(B, imbinarize(frame),'black');
 fuse2 = rgb2gray(fuse2);

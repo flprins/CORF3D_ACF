@@ -50,22 +50,19 @@ def batch_data_preprocessing(dataset_1, dataset_2, dataset_3, feature_map):
             preprocessed_path = dataset_3
             if os.path.exists(dataset_3 + "/" + folder_name):
                 class_folder_path = dataset_3 + "/" + folder_name
-                cv2.imwrite(class_folder_path + "/" + folder_name + "_" + str(idx + 1) + ".jpg",
-                            inpainted_image)
+                cv2.imwrite(class_folder_path + "/" + str(rgb_image_idx), inpainted_image)
             else:
                 if os.path.exists(preprocessed_path):
                     os.mkdir(dataset_3 + "/" + folder_name)
                     class_folder_path = dataset_3 + "/" + folder_name
                     cv2.imwrite(
-                        class_folder_path + "/" + folder_name + "_" + str(idx + 1) + ".jpg",
-                        inpainted_image)
+                        class_folder_path + "/" + str(rgb_image_idx), inpainted_image)
                 else:
                     os.mkdir(preprocessed_path)
                     os.mkdir(dataset_3 + "/" + folder_name)
                     class_folder_path = dataset_3 + "/" + folder_name
                     cv2.imwrite(
-                        class_folder_path + "/" + folder_name + "_" + str(idx + 1) + ".jpg",
-                        inpainted_image)
+                        class_folder_path + "/" + str(rgb_image_idx), inpainted_image)
             list_of_inpainted_images.append(inpainted_image)
         labels_list.append(folder_name)
         labels.append([folder_name] * len(img_list))
