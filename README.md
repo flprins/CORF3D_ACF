@@ -1,6 +1,6 @@
 # CORF3D contour maps with application to Holstein cattle recognition using RGB and thermal images
 
-This respository contains code for the project "CORF3D contour maps with application to Holstein cattle recognition using RGB and thermal images"
+This respository contains code for the project ["CORF3D contour maps with application to Holstein cattle recognition using RGB and thermal images"](https://www.sciencedirect.com/science/article/pii/S0957417421016511?via=ihub)
 
 If you have any questions on this repository or the related paper, feel free to [create an issue](https://github.com/ameybhole/CORF3D_HCR/issues/new) or [send me an email](amey.bhole77@gmail.com).
 #### Summary
