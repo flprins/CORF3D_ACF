@@ -136,3 +136,27 @@ We thank the Dairy Campus in Leeuwarden for permitting the data collection used 
 
 If you find this paper or code useful, we encourage you to cite the paper. BibTeX:
 
+      @article{BHOLE2021116354,
+      title = {CORF3D contour maps with application to Holstein cattle recognition from RGB and thermal images},
+      journal = {Expert Systems with Applications},
+      pages = {116354},
+      year = {2021},
+      issn = {0957-4174},
+      doi = {https://doi.org/10.1016/j.eswa.2021.116354},
+      url = {https://www.sciencedirect.com/science/article/pii/S0957417421016511},
+      author = {Amey Bhole and Sandeep S. Udmale and Owen Falzon and George Azzopardi},
+      keywords = {Animal biometrics, Cattle recognition, Contour detection, ConvNets, Push-pull inhibition, Thermal images},
+      abstract = {Livestock management involves the monitoring of farm animals by tracking certain physiological and phenotypical characteristics over time. In the dairy industry, for instance, cattle are typically equipped with RFID ear tags. The corresponding data (e.g. milk properties) can then be automatically assigned to the respective cow when they enter the milking station. In order to move towards a more scalable, affordable, and welfare-friendly approach, automatic non-invasive solutions are more desirable. Thus, a non-invasive approach is proposed in this paper for the automatic identification of individual Holstein cattle from the side view while exiting a milking station. It considers input images from a thermal-RGB camera. The thermal images are used to delineate the cow from the background. Subsequently, any occluding rods from the milking station are removed and inpainted with the fast marching algorithm. Then, it extracts the RGB map of the segmented cattle along with a novel CORF3D contour map. The latter contains three contour maps extracted by the Combination of Receptive Fields (CORF) model with different strengths of push-pull inhibition. This mechanism suppresses noise in the form of grain type texture. The effectiveness of the proposed approach is demonstrated by means of experiments using a 5-fold and a leave-one day-out cross-validation on a new data set of 3694 images of 383 cows collected from the Dairy Campus in Leeuwarden (the Netherlands) over 9 days. In particular, when combining RGB and CORF3D maps by late fusion, an average accuracy of 99.64%(±0.13) was obtained for the 5-fold cross validation and 99.71%(±0.31) for the leave–one day–out experiment. The two maps were combined by first learning two ConvNet classification models, one for each type of map. The feature vectors in the two FC layers obtained from training images were then concatenated and used to learn a linear SVM classification model. In principle, the proposed approach with the novel CORF3D contour maps is suitable for various image classification applications, especially where grain type texture is a confounding variable.}
+      }
+      
+      @article{azzopardi2014push,
+      title={A push-pull CORF model of a simple cell with antiphase inhibition improves SNR and contour detection},
+      author={Azzopardi, George and Rodr{\'\i}guez-S{\'a}nchez, Antonio and Piater, Justus and Petkov, Nicolai},
+      journal={PLoS One},
+      volume={9},
+      number={7},
+      pages={e98424},
+      year={2014},
+      publisher={Public Library of Science San Francisco, USA}
+    }
+
