@@ -139,7 +139,7 @@ if __name__ == '__main__':
             corf_feature_set_norm_2 = feature_normalization(corf_feature_set_2)
             corf_feature_set_3 = corf_feature_maps(args.preprocessed_dataset, 2.2, 4, 3.6, 0.005)
             corf_feature_set_norm_3 = feature_normalization(corf_feature_set_3)
-            corf_feature_set = feature_stack(corf_feature_set_norm_1, corf_feature_set_norm_2,
+            dataset_1 = feature_stack(corf_feature_set_norm_1, corf_feature_set_norm_2,
                                              corf_feature_set_norm_3)
 
         binarizelabels = binarize_labels(labels)
