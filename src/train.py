@@ -58,17 +58,16 @@ def train_model(model, X_train, y_train, batch_size, num_epochs, X_test, y_test,
     return model, hist, loss, accuracy
 
 
+# TODO: Refactor to remove redundant y-arrays by returning skf.split
 def five_cross_validation(dataset, labels, skf):
     """
+    Function to return indices of five cross validation
 
-      Function to return indexs of five cross validation
+    :param dataset: Dataset used for training and testing
+    :param labels: Dataset labels
+    :param skf: Cross validation split
 
-      :param dataset: Dataset used for training and testing
-      :param labels: Dataset labels
-      :param skf: Corss validation split
-
-      :return: indexs of training and testing data
-
+    :return: indices of training and testing data
     """
 
     X_train_index = []

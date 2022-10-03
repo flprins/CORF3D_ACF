@@ -1,6 +1,7 @@
+import os
+
 import matlab.engine
 import numpy as np
-import os
 import cv2
 from sklearn import preprocessing
 
@@ -16,7 +17,7 @@ def corf_feature_maps(dataset, sigma, beta, inhibitionFactor, highthresh):
     :param dataset: Folder with class name and all the pre-processed images
     :param sigma: The standard deviation of the DoG functions used
     :param beta: The increase in the distance between the sets of center-on
-                 and ceter-off DoG receptive fields
+                 and center-off DoG receptive fields
     :param inhibitionFactor: The factor by which the response exhibited in the
                              inhibitory receptive field suppresses the response exhibited in the
                              excitatory receptive field
@@ -26,21 +27,31 @@ def corf_feature_maps(dataset, sigma, beta, inhibitionFactor, highthresh):
 
     """
 
-    list_of_image_paths = []
+    response_maps = []
 
-    m.addpath('.\src\CORFpushpull', nargout=0)
+    m.addpath(os.path.join(os.path.dirname(__file__), "CORFpushpull"), nargout=0)
 
-    data_dir_list = os.listdir(dataset)
-    for folder_name in data_dir_list:
-        img_list = os.listdir(dataset + '/' + folder_name)
-        for image in img_list:
-            retrieve_dir = dataset + "/" + folder_name + "/" + image
+    class_folder = np.random.choice(os.listdir(dataset))
+    image = np.random.choice(os.listdir(os.path.join(dataset, class_folder)))
+    retrieve_dir = os.path.join(dataset, class_folder, image)
+    images = m.imread(retrieve_dir)
+    # images = m.imresize(images, 0.05)
+    binarymap, corfresponse = m.CORFContourDetection(images, sigma, beta, inhibitionFactor,
+                                                     highthresh, nargout=2)
+    response_maps.append(corfresponse)
+    return np.array(response_maps)
+
+    for folder_name in os.listdir(dataset):
+        for image in os.listdir(os.path.join(dataset, folder_name)):
+            retrieve_dir = os.path.join(dataset, folder_name, image)
             images = m.imread(retrieve_dir)
+            # images = m.imresize(images, 0.05)
             binarymap, corfresponse = m.CORFContourDetection(images, sigma, beta, inhibitionFactor,
                                                              highthresh, nargout=2)
-            list_of_image_paths.append(corfresponse)
+            response_maps.append(corfresponse)
+            break
 
-    return np.array(list_of_image_paths)
+    return np.array(response_maps)
 
 
 def temp_feature_maps(dataset):
@@ -59,8 +70,8 @@ def temp_feature_maps(dataset):
     labels = []
     labels_list = []
 
-    m.addpath('.\src\Temp_extraction', nargout=0)
-    m.addpath('.\src\Preprocessing', nargout=0)
+    m.addpath(os.path.join(__file__, "src", "Temp_extraction"), nargout=0)
+    m.addpath(os.path.join(__file__, "src", "Preprocessing"), nargout=0)
 
     data_dir_list = os.listdir(dataset)
     for folder_name in data_dir_list:

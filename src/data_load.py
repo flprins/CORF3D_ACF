@@ -1,50 +1,44 @@
 import os
+
 import cv2
 import numpy as np
 from sklearn import preprocessing
 
 
 def load_images(dataset, resize):
-
     """
-
     Function to return an list of images and its labels
 
     :param resize: resize the image
     :param dataset: Folder with class name and all the images in the dataset
     :return: Lists of image in an array form
-
     """
 
-    img_data_list = []
     labels = []
     list_of_image_paths = []
-    labels_list = []
+    labels_list = []  # All unique labels
 
-    data_dir_list = os.listdir(dataset)
-    for folder_name in data_dir_list:
-        img_list = os.listdir(dataset + '/' + folder_name)
-        for image in img_list:
-            retrieve_dir = dataset + "/" + folder_name + "/" + image
-            images = cv2.imread(retrieve_dir, 3)
-            images = cv2.resize(images, (resize, resize))
-            list_of_image_paths.append(images)
-        img_data_list.append(img_list)
-        labels_list.append(folder_name)
-        labels.append([folder_name] * len(img_list))
+    for file in os.listdir(dataset):
+        retrieve_dir = os.path.join(dataset, file)
+        img = cv2.imread(retrieve_dir, 3)
+        img = cv2.resize(img, (resize, resize))
+        list_of_image_paths.append(img)
+        filename_elements = file.split('_')
+        label = f'{filename_elements[1]}_{filename_elements[2]}'  # frogX_tankX
+        if label not in labels_list:
+            labels_list.append(label)
+        labels.append(label)
 
     return np.array(list_of_image_paths), labels, labels_list
 
+
 def load_feature_maps(dataset, resize):
-
     """
-
     Function to return an list of feautre maps and its labels
 
     :param resize: resize the feature maps
     :param dataset: Folder with class name and all the feature maps in the dataset
     :return: Lists of feature maps in an array form
-
     """
 
     feature_data_list = []
@@ -66,15 +60,13 @@ def load_feature_maps(dataset, resize):
 
     return np.array(list_of_feature_paths), labels, labels_list
 
+
 def binarize_labels(labels):
-
     """
-
     Function to return an list of binarized labels
 
     :param labels: List of labels
     :return: Lists of binarized labels
-
     """
 
     flattened_list = np.asarray([y for x in labels for y in x], dtype="str")
