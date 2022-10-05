@@ -1,3 +1,5 @@
+import os.path
+
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from sklearn.model_selection import StratifiedShuffleSplit, LeaveOneGroupOut
 import numpy as np
@@ -41,7 +43,10 @@ def train_model(model, X_train, y_train, batch_size, num_epochs, X_test, y_test,
 
     """
 
-    filepath = "./models/" + str(model_name) + "_" + str(counter) + "_" + str(feature_map)+ "_model.h5"
+    model_path = os.path.join(os.path.dirname(__file__), '..', 'models')
+    if not os.path.exists(model_path):
+        os.mkdir(model_path)
+    filepath = os.path.join(model_path, f'{model_name}_{counter}_{feature_map}_model.h5')
     earlyStopping = EarlyStopping(monitor='val_categorical_accuracy', patience=7, verbose=2,
                                   mode='auto')
     checkpoint = ModelCheckpoint(filepath, save_best_only=True, monitor='val_categorical_accuracy',
@@ -70,18 +75,14 @@ def five_cross_validation(dataset, labels, skf):
     :return: indices of training and testing data
     """
 
-    X_train_index = []
-    X_test_index = []
-    y_train_index = []
-    y_test_index = []
+    train_index = []
+    test_index = []
 
-    for train_index, test_index in skf.split(dataset, labels):
-        X_train_index.append(train_index)
-        X_test_index.append(test_index)
-        y_train_index.append(train_index)
-        y_test_index.append(test_index)
+    for train_idx, test_idx in skf.split(dataset, labels):
+        train_index.append(train_idx)
+        test_index.append(test_idx)
 
-    return X_train_index, X_test_index, y_train_index, y_test_index
+    return train_index, test_index
 
 
 def leave_one_day_out(timestamps, dataset, labels):

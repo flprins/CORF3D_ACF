@@ -133,16 +133,19 @@ def main():
     args = get_args()
 
     # TODO: Implement data loading
-    if args.pre_processing:
+    if args.preprocessing:
         raise NotImplementedError
     else:
-        dataset_1, labels, labels_list = load_images(args.dataset_1, args.resize)
-        binarizelabels = binarize_labels(labels)
+        if args.dataset_rgb:
+            dataset_1, labels, labels_list = load_images(args.dataset_rgb, args.resize)
+            binarizelabels = binarize_labels(labels)
+        else:
+            raise NotImplementedError
 
     skf = train_test_split(5)
     all_fold_accuracy = []
     all_fold_loss = []
-    model = Models(args.trainable, args.classes, args.pretrained_dataset, args.include_top,
+    model = Models(args.trainable, len(labels_list), args.pretrained_dataset, args.include_top,
                    args.learning_rate)
 
     if args.model == 'densenet121':
@@ -156,6 +159,7 @@ def main():
     compiled_model = model.model_compile(args.learning_rate)
 
     if args.method == '5_fold':
+        # TODO: Fix ValueError: Found input variables with inconsistent numbers of samples: [528, 6088]
         train_index, test_index = five_cross_validation(dataset_1, binarizelabels, skf)
     else:  # method == 'leave-one-out'
         train_index, test_index = leave_one_day_out(dataset_1, binarizelabels, skf)
@@ -164,7 +168,7 @@ def main():
         for fold in range(len(train_index)):
             fold_accuracy, fold_loss = single_training(dataset_1, fold, train_index, test_index, binarizelabels,
                                                        compiled_model, args.batch_size, args.num_epochs,
-                                                       args.model, args.feature_map_1)
+                                                       args.model, "RGB")
             all_fold_accuracy.append(fold_accuracy)
             all_fold_loss.append(fold_loss)
 
@@ -172,6 +176,7 @@ def main():
         print('Std accuracy of Model', np.std(all_fold_accuracy))
 
     else:  # mode == fusion
+        raise NotImplementedError
         all_fold_accuracy_2 = []
         all_fold_loss_2 = []
         all_fold_svm_accuracy = []

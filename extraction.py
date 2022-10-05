@@ -179,7 +179,7 @@ def plot_preprocessing(image_path: str):
     return merged_image
 
 
-def plot_preprocessing2(image_path: str):
+def extract_square(image_path: str):
     # Read and resize the image
     img = cv2.imread(image_path)
     img = cv2.resize(img, (0, 0), fx=0.2, fy=0.2)
@@ -246,8 +246,13 @@ def main():
     for image in os.listdir(args.input_directory):
         # TODO: support more image formats by converting to cv2-supported formats
         if os.path.splitext(image)[1].lower() in [".jpg", ".jpeg", ".png"]:
-            extraction_image = plot_preprocessing2(os.path.join(args.input_directory, image))
-            cv2.imwrite(os.path.join(args.output_directory, os.path.splitext(image)[0] + ".png"), extraction_image)
+            full_path = os.path.join(args.input_directory, image)
+            try:
+                extraction_image = extract_square(full_path)
+            except cv2.error as e:
+                print(f'Encountered an exception during extraction of \"{full_path}\":\n{e}')
+            else:
+                cv2.imwrite(os.path.join(args.output_directory, os.path.splitext(image)[0] + ".png"), extraction_image)
 
 
 def extraction_test():

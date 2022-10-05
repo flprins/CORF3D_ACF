@@ -15,21 +15,21 @@ def load_images(dataset, resize):
     """
 
     labels = []
-    list_of_image_paths = []
+    images = []
     labels_list = []  # All unique labels
 
     for file in os.listdir(dataset):
-        retrieve_dir = os.path.join(dataset, file)
-        img = cv2.imread(retrieve_dir, 3)
+        full_path = os.path.join(dataset, file)
+        img = cv2.imread(full_path, 3)
         img = cv2.resize(img, (resize, resize))
-        list_of_image_paths.append(img)
+        images.append(img)
         filename_elements = file.split('_')
         label = f'{filename_elements[1]}_{filename_elements[2]}'  # frogX_tankX
         if label not in labels_list:
             labels_list.append(label)
         labels.append(label)
 
-    return np.array(list_of_image_paths), labels, labels_list
+    return np.array(images), labels, labels_list
 
 
 def load_feature_maps(dataset, resize):
@@ -69,7 +69,7 @@ def binarize_labels(labels):
     :return: Lists of binarized labels
     """
 
-    flattened_list = np.asarray([y for x in labels for y in x], dtype="str")
+    flattened_list = np.asarray(labels, dtype="str")
     lb = preprocessing.LabelBinarizer().fit(flattened_list)
     labels = lb.transform(flattened_list)
 
