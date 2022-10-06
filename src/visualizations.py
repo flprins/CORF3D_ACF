@@ -100,4 +100,4 @@ def plot_data_graph(hist, num_epochs, counter, model_name, feature_map):
     plt.title('train_acc vs val_acc')
     plt.grid(True)
     plt.legend(['train', 'val'])
-    plt.savefig("./plots/" + str(model_name) + "_" + str(counter)  + "_" + str(feature_map) + "_acc")
+    plt.savefig("./plots/" + str(model_name) + "_" + str(counter) + "_" + str(feature_map) + "_acc")

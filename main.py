@@ -66,7 +66,7 @@ def get_args():
 
 
 def single_training(dataset, fold: int, train_index, test_index, binarizelabels, compiled_model, batch_size, num_epochs,
-                    model, feature_map):
+                    model_name, feature_map):
     """
     Plots data graph and returns accuracy and loss for a single model
     """
@@ -74,30 +74,30 @@ def single_training(dataset, fold: int, train_index, test_index, binarizelabels,
     y_train, y_test = binarizelabels[train_index[fold]], binarizelabels[test_index[fold]]
 
     model, hist, loss, accuracy = train_model(compiled_model, X_train, y_train, batch_size, num_epochs, X_test, y_test,
-                                              model, fold + 1, feature_map)
+                                              model_name, fold + 1, feature_map)
 
-    plot_data_graph(hist, num_epochs, fold + 1, model, feature_map)
+    plot_data_graph(hist, num_epochs, fold + 1, model_name, feature_map)
     return accuracy * 100, loss
 
 
 def fusion_training(dataset_1, dataset_2, fold: int, train_index, test_index, binarizelabels, compiled_model,
-                    batch_size, num_epochs, model, feature_map_1, feature_map_2):
+                    batch_size, num_epochs, model_name, feature_map_1, feature_map_2):
     """
     Plots data graphs and returns accuracies and losses for two models,
     as well as SVM accuracy for a fusion model
     """
     fold_accuracy_1, fold_loss_1 = single_training(dataset_1, fold, train_index, test_index, binarizelabels,
-                                                   compiled_model, batch_size, num_epochs, model, feature_map_1)
+                                                   compiled_model, batch_size, num_epochs, model_name, feature_map_1)
     fold_accuracy_2, fold_loss_2 = single_training(dataset_2, fold, train_index, test_index, binarizelabels,
-                                                   compiled_model, batch_size, num_epochs, model, feature_map_2)
+                                                   compiled_model, batch_size, num_epochs, model_name, feature_map_2)
 
     # Convert to single column
     y_train = np.argmax(binarizelabels[train_index[fold]], axis=1)
     y_test = np.argmax(binarizelabels[test_index[fold]], axis=1)
 
     # Load models
-    filepath_1 = os.path.join('.', 'models', f'{model}_{fold+1}_{feature_map_1}_model.h5')
-    filepath_2 = os.path.join('.', 'models', f'{model}_{fold+1}_{feature_map_2}_model.h5')
+    filepath_1 = os.path.join('.', 'models', f'{model_name}_{fold+1}_{feature_map_1}_model.h5')
+    filepath_2 = os.path.join('.', 'models', f'{model_name}_{fold+1}_{feature_map_2}_model.h5')
 
     trained_model_1 = load_model(filepath_1)
     trained_model_2 = load_model(filepath_2)
@@ -139,8 +139,11 @@ def main():
         if args.dataset_rgb:
             dataset_1, labels, labels_list = load_images(args.dataset_rgb, args.resize)
             binarizelabels = binarize_labels(labels)
+        elif args.dataset_corf:
+            dataset_1, labels, labels_list = load_images(args.dataset_rgb, args.resize)
+            binarizelabels = binarize_labels(labels)
         else:
-            raise NotImplementedError
+            raise argparse.ArgumentError("A dataset_rgb or dataset_corf argument is required.")
 
     skf = train_test_split(5)
     all_fold_accuracy = []

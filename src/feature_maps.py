@@ -8,6 +8,33 @@ from sklearn import preprocessing
 m = matlab.engine.start_matlab()
 
 
+def corf_feature_map(image_path, sigma, beta, inhibition_factor, highthresh):
+
+    """
+
+    Function to return an list of CORF feature maps
+
+    :param image_path: File path to preprocessed RGB image
+    :param sigma: The standard deviation of the DoG functions used
+    :param beta: The increase in the distance between the sets of center-on
+                 and center-off DoG receptive fields
+    :param inhibition_factor: The factor by which the response exhibited in the
+                             inhibitory receptive field suppresses the response exhibited in the
+                             excitatory receptive field
+    :param highthresh: The high threshold of the non-maximum suppression used for binarization
+
+    :return: List of the response map of the rotation-invariant CORF operator (CORF feature maps) in an array form
+
+    """
+
+    m.addpath(os.path.join(os.path.dirname(__file__), "CORFpushpull"), nargout=0)
+
+    img = m.imread(image_path)
+    binarymap, corfresponse = m.CORFContourDetection(img, sigma, beta, inhibition_factor,
+                                                     highthresh, nargout=2)
+    return np.array(corfresponse)
+
+
 def corf_feature_maps(dataset, sigma, beta, inhibitionFactor, highthresh):
 
     """

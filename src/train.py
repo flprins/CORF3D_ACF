@@ -103,17 +103,13 @@ def leave_one_day_out(timestamps, dataset, labels):
     data_list = []
     data_list.extend(df['Day no'].tolist())
 
-    X_train_index = []
-    X_test_index = []
-    y_train_index = []
-    y_test_index = []
+    train_index = []
+    test_index = []
     logo = LeaveOneGroupOut()
     logo.get_n_splits(groups=data_list)
 
-    for train_index, test_index in logo.split(dataset, labels, data_list):
-        X_train_index.append(train_index)
-        X_test_index.append(test_index)
-        y_train_index.append(train_index)
-        y_test_index.append(test_index)
+    for train_idx, test_idx in logo.split(dataset, labels, data_list):
+        train_index.append(train_idx)
+        test_index.append(test_idx)
 
-    return X_train_index, X_test_index, y_train_index, y_test_index
+    return train_index, test_index
