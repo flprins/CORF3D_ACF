@@ -24,14 +24,13 @@ def main():
 
     corf_arrays = {}
     for image in os.listdir(args.input_directory):
-        if os.path.splitext(image)[1].lower() in [".jpg", ".jpeg", ".png"]:
-            full_path = os.path.join(args.input_directory, image)
-            try:
-                corf_image = corf_feature_map(full_path, 2.2, 4, 0.0, 0.005)
-            except cv2.error as e:
-                print(f'Encountered an exception during corf conversion of \"{full_path}\":\n{e}')
-            else:
-                corf_arrays[full_path] = corf_image
+        full_path = os.path.join(args.input_directory, image)
+        try:
+            corf_image = corf_feature_map(full_path, 2.2, 4, 0.0, 0.005)
+        except cv2.error as e:
+            print(f'Encountered an exception during corf conversion of \"{full_path}\":\n{e}')
+        else:
+            corf_arrays[image] = corf_image
     np.savez_compressed(os.path.join(args.output_directory, "corf"), **corf_arrays)
 
 

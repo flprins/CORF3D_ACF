@@ -5,9 +5,9 @@ import numpy as np
 from sklearn import preprocessing
 
 
-def load_images(dataset, resize):
+def load_images(dataset, resize=None):
     """
-    Function to return an list of images and its labels
+    Function to return a list of images and its labels
 
     :param resize: resize the image
     :param dataset: Folder with class name and all the images in the dataset
@@ -17,24 +17,59 @@ def load_images(dataset, resize):
     labels = []
     images = []
     labels_list = []  # All unique labels
+    filenames = []
 
     for file in os.listdir(dataset):
+        if os.path.splitext(file)[1] != ".png":
+            continue
         full_path = os.path.join(dataset, file)
         img = cv2.imread(full_path, 3)
-        img = cv2.resize(img, (resize, resize))
+        if resize:
+            img = cv2.resize(img, (resize, resize))
         images.append(img)
         filename_elements = file.split('_')
         label = f'{filename_elements[1]}_{filename_elements[2]}'  # frogX_tankX
         if label not in labels_list:
             labels_list.append(label)
         labels.append(label)
+        filenames.append(file)
 
-    return np.array(images), labels, labels_list
+    return np.array(images), labels, labels_list, filenames
+
+
+def load_corf_arrays(dataset):
+    """
+    Function to return an list of CORF arrays and its labels
+
+    :param resize: resize the image
+    :param dataset: Folder with class name and all the images in the dataset
+    :return: Lists of image in an array form
+    """
+
+    labels = []
+    corf_arrays = []
+    labels_list = []  # All unique labels
+
+    corf_dict = np.load(dataset)
+    for filename, data in corf_dict.items():
+        img = cv2.cvtColor(data*255, cv2.COLOR_GRAY2RGB)
+        # img = np.zeros([*data.shape, 3])
+        # img[:, :, 0] = data*255.0
+        # img[:, :, 1] = data*255.0
+        # img[:, :, 2] = data*255.0
+        corf_arrays.append(img)
+        filename_elements = filename.split('_')
+        label = f'{filename_elements[1]}_{filename_elements[2]}'  # frogX_tankX
+        if label not in labels_list:
+            labels_list.append(label)
+        labels.append(label)
+
+    return np.array(corf_arrays), labels, labels_list
 
 
 def load_feature_maps(dataset, resize):
     """
-    Function to return an list of feautre maps and its labels
+    Function to return an list of feature maps and its labels
 
     :param resize: resize the feature maps
     :param dataset: Folder with class name and all the feature maps in the dataset

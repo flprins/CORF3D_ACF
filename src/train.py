@@ -1,24 +1,26 @@
 import os.path
 
 from keras.callbacks import ModelCheckpoint, EarlyStopping
-from sklearn.model_selection import StratifiedShuffleSplit, LeaveOneGroupOut
+from sklearn.model_selection import StratifiedShuffleSplit, LeaveOneGroupOut, StratifiedKFold
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import GroupKFold
 
 
-def train_test_split(n_split):
+def train_test_split(n_split, random_state=None):
 
     """
 
     Function to return train and test sets
 
-    :param n_split : number of splits
+    :param n_split: number of splits
+    :param random_state: rng state for debugging
     :return: Object for splitting dataset in a stratified way
 
     """
 
-    skf = StratifiedShuffleSplit(n_splits=n_split, random_state=None, test_size=0.2)
+    # skf = StratifiedShuffleSplit(n_splits=n_split, random_state=random_state, test_size=0.2)
+    skf = StratifiedKFold(n_splits=n_split, shuffle=True, random_state=random_state)
 
     return skf
 
@@ -39,7 +41,7 @@ def train_model(model, X_train, y_train, batch_size, num_epochs, X_test, y_test,
     :param y_test: Testing labels
     :param model_name: Name of model
     :param model: Model to be trained
-    :return: Trained model, History of training, Loss, Accuracy
+    :return: Trained model, History of training, Loss, Accuracy, Predictions
 
     """
 
@@ -54,23 +56,22 @@ def train_model(model, X_train, y_train, batch_size, num_epochs, X_test, y_test,
     callbacks_list = [earlyStopping, checkpoint]
 
     hist = model.fit(X_train, y_train, batch_size=batch_size, epochs=num_epochs,
-                     verbose=2,
-                     validation_data=(X_test, y_test), callbacks=callbacks_list)
+                     verbose=2, validation_data=(X_test, y_test), callbacks=callbacks_list)
 
-    (loss, accuracy) = model.evaluate(X_test, y_test, batch_size=batch_size, verbose=2)
-    print("[INFO] loss={:.4f}, accuracy: {:.4f}%".format(loss, accuracy * 100))
+    y_pred = model.predict(X_test)
 
-    return model, hist, loss, accuracy
+    loss, accuracy = model.evaluate(X_test, y_test, batch_size=batch_size, verbose=2)
+    print(f'[INFO] loss={loss:.4f}, accuracy: {accuracy*100:.4f}%')
+
+    return model, hist, loss, accuracy, y_pred
 
 
-# TODO: Refactor to remove redundant y-arrays by returning skf.split
-def five_cross_validation(dataset, labels, skf):
+def five_cross_validation(dataset, labels):
     """
     Function to return indices of five cross validation
 
     :param dataset: Dataset used for training and testing
     :param labels: Dataset labels
-    :param skf: Cross validation split
 
     :return: indices of training and testing data
     """
@@ -78,7 +79,9 @@ def five_cross_validation(dataset, labels, skf):
     train_index = []
     test_index = []
 
-    for train_idx, test_idx in skf.split(dataset, labels):
+    skf = train_test_split(5)
+
+    for train_idx, test_idx in skf.split(dataset, labels.argmax(1)):
         train_index.append(train_idx)
         test_index.append(test_idx)
 
