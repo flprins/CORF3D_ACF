@@ -5,7 +5,7 @@ import numpy as np
 from sklearn import preprocessing
 
 
-def load_images(dataset, resize=None):
+def load_images(dataset, resize):
     """
     Function to return a list of images and its labels
 
@@ -24,8 +24,7 @@ def load_images(dataset, resize=None):
             continue
         full_path = os.path.join(dataset, file)
         img = cv2.imread(full_path, 3)
-        if resize:
-            img = cv2.resize(img, (resize, resize))
+        img = cv2.resize(img, (resize, resize))
         images.append(img)
         filename_elements = file.split('_')
         label = f'{filename_elements[1]}_{filename_elements[2]}'  # frogX_tankX
@@ -37,7 +36,7 @@ def load_images(dataset, resize=None):
     return np.array(images), labels, labels_list, filenames
 
 
-def load_corf_arrays(dataset):
+def load_corf_arrays(dataset, resize):
     """
     Function to return an list of CORF arrays and its labels
 
@@ -49,10 +48,15 @@ def load_corf_arrays(dataset):
     labels = []
     corf_arrays = []
     labels_list = []  # All unique labels
+    filenames = []
 
     corf_dict = np.load(dataset)
     for filename, data in corf_dict.items():
-        img = cv2.cvtColor(data*255, cv2.COLOR_GRAY2RGB)
+        if data.dtype == "uint8":
+            img = cv2.cvtColor(data, cv2.COLOR_GRAY2RGB)
+        else:
+            img = cv2.cvtColor((data*255).astype(np.uint8), cv2.COLOR_GRAY2RGB)
+        img = cv2.resize(img, (resize, resize))
         # img = np.zeros([*data.shape, 3])
         # img[:, :, 0] = data*255.0
         # img[:, :, 1] = data*255.0
@@ -63,8 +67,9 @@ def load_corf_arrays(dataset):
         if label not in labels_list:
             labels_list.append(label)
         labels.append(label)
+        filenames.append(filename)
 
-    return np.array(corf_arrays), labels, labels_list
+    return np.array(corf_arrays), labels, labels_list, filenames
 
 
 def load_feature_maps(dataset, resize):

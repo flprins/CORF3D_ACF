@@ -53,7 +53,7 @@ class Models(object):
 
         self.model_out = Model(inputs=base_model.input, outputs=out)
 
-    def mobilenet(self):
+    def mobilenet(self, input_shape):
         """
 
         Function to return MobileNet model
@@ -61,7 +61,7 @@ class Models(object):
         """
 
         base_model = MobileNet(weights=self.weights, include_top=self.include_top,
-                               pooling='avg')
+                               pooling='avg', input_shape=input_shape)
         x = base_model.layers[-1]
         out = Dense(units=self.num_classes, activation='softmax', name='output',
                     use_bias=True)(x.output)

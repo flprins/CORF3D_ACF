@@ -1,10 +1,12 @@
 import argparse
 import os
+import pathlib
+import traceback
 
 import cv2
 import numpy as np
 
-from src.feature_maps import corf_feature_map
+from src.feature_maps import corf_feature_maps, feature_stack, feature_normalization
 
 
 def get_args():
@@ -19,19 +21,17 @@ def get_args():
 def main():
     args = get_args()
 
-    if not os.path.exists(args.output_directory):
-        os.mkdir(args.output_directory)
+    pathlib.Path(args.output_directory).mkdir(parents=True, exist_ok=True)
 
-    corf_arrays = {}
-    for image in os.listdir(args.input_directory):
-        full_path = os.path.join(args.input_directory, image)
-        try:
-            corf_image = corf_feature_map(full_path, 2.2, 4, 0.0, 0.005)
-        except cv2.error as e:
-            print(f'Encountered an exception during corf conversion of \"{full_path}\":\n{e}')
-        else:
-            corf_arrays[image] = corf_image
-    np.savez_compressed(os.path.join(args.output_directory, "corf"), **corf_arrays)
+    # TODO: Investigate misclassifications
+    for inhibition_factor in [0.0, 1.8, 3.6]:
+        print(f'Calculating CORF feature maps for inhibition factor {inhibition_factor}...')
+        corf_feature_set = corf_feature_maps(args.input_directory, 2.2, 4, inhibition_factor, 0.005)
+        corf_feature_set_norm = feature_normalization(corf_feature_set)
+        np.savez_compressed(os.path.join(args.output_directory, f'corf_{inhibition_factor}'), corf_feature_set_norm)
+
+    labels = [x for x in os.listdir(args.input_directory) if os.path.splitext(x)[1] in [".jpg", ".jpeg", ".png"]]
+    np.savez_compressed(os.path.join(args.output_directory, "labels"), np.asarray(labels))
 
 
 if __name__ == '__main__':

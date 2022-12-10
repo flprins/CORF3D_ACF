@@ -30,18 +30,17 @@ def corf_feature_map(image_path, sigma, beta, inhibition_factor, highthresh):
     m.addpath(os.path.join(os.path.dirname(__file__), "CORFpushpull"), nargout=0)
 
     img = m.imread(image_path)
-    binarymap, corfresponse = m.CORFContourDetection(img, sigma, beta, inhibition_factor,
-                                                     highthresh, nargout=2)
+    binarymap, corfresponse = m.CORFContourDetection(img, sigma, beta, inhibition_factor, highthresh, nargout=2)
     return np.array(corfresponse)
 
 
-def corf_feature_maps(dataset, sigma, beta, inhibitionFactor, highthresh):
+def corf_feature_maps(dataset_path, sigma, beta, inhibitionFactor, highthresh):
 
     """
 
     Function to return an list of CORF feature maps
 
-    :param dataset: Folder with class name and all the pre-processed images
+    :param dataset_path: Folder with class name and all the pre-processed images
     :param sigma: The standard deviation of the DoG functions used
     :param beta: The increase in the distance between the sets of center-on
                  and center-off DoG receptive fields
@@ -58,25 +57,20 @@ def corf_feature_maps(dataset, sigma, beta, inhibitionFactor, highthresh):
 
     m.addpath(os.path.join(os.path.dirname(__file__), "CORFpushpull"), nargout=0)
 
-    class_folder = np.random.choice(os.listdir(dataset))
-    image = np.random.choice(os.listdir(os.path.join(dataset, class_folder)))
-    retrieve_dir = os.path.join(dataset, class_folder, image)
-    images = m.imread(retrieve_dir)
-    # images = m.imresize(images, 0.05)
-    binarymap, corfresponse = m.CORFContourDetection(images, sigma, beta, inhibitionFactor,
-                                                     highthresh, nargout=2)
-    response_maps.append(corfresponse)
-    return np.array(response_maps)
-
-    for folder_name in os.listdir(dataset):
-        for image in os.listdir(os.path.join(dataset, folder_name)):
-            retrieve_dir = os.path.join(dataset, folder_name, image)
-            images = m.imread(retrieve_dir)
-            # images = m.imresize(images, 0.05)
-            binarymap, corfresponse = m.CORFContourDetection(images, sigma, beta, inhibitionFactor,
-                                                             highthresh, nargout=2)
-            response_maps.append(corfresponse)
-            break
+    n_files = len(os.listdir(dataset_path))
+    log_steps = np.linspace(0, n_files, 11, dtype=np.uint)[1:-1]
+    log_step = 0
+    for i, image in enumerate(os.listdir(dataset_path)):
+        if os.path.splitext(image)[1].lower() not in [".jpg", ".jpeg", ".png"]:
+            continue
+        if i == log_steps[log_step]:
+            print(f'Done {i} out of {n_files}...')
+            log_step += 1
+        retrieve_dir = os.path.join(dataset_path, image)
+        image = m.imread(retrieve_dir)
+        binarymap, corfresponse = m.CORFContourDetection(image, sigma, beta, inhibitionFactor,
+                                                         highthresh, nargout=2)
+        response_maps.append(corfresponse)
 
     return np.array(response_maps)
 
@@ -119,7 +113,7 @@ def feature_normalization(feature_maps):
 
     """
 
-    Function to return an list of scaled feature maps
+    Function to return a list of scaled feature maps
 
     :param feature_maps: List of feature maps
 
@@ -129,9 +123,9 @@ def feature_normalization(feature_maps):
 
     list_scaled_feature_maps = []
 
-    for i in range(0, len(feature_maps)):
+    for feature_map in feature_maps:
         min_max_scaler = preprocessing.MinMaxScaler()
-        scaled_feature_maps = min_max_scaler.fit_transform(feature_maps[i])
+        scaled_feature_maps = min_max_scaler.fit_transform(feature_map)
         list_scaled_feature_maps.append(scaled_feature_maps)
 
     return np.array(list_scaled_feature_maps)
@@ -153,10 +147,8 @@ def feature_stack(feature_maps_one, feature_map_two, feature_map_three):
 
     list_concatenate = []
 
-    for i in range(0, len(feature_maps_one)):
-        concatenate_features = np.stack([feature_maps_one[i], feature_map_two[i],
-                                         feature_map_three[i]],
-                                        axis=-1)
+    for i in range(len(feature_maps_one)):
+        concatenate_features = np.stack([feature_maps_one[i], feature_map_two[i], feature_map_three[i]], axis=-1)
         list_concatenate.append(concatenate_features)
 
     return np.array(list_concatenate)

@@ -34,8 +34,6 @@ def get_args():
                         help='Whether to use the preprocessing step')
     parser.add_argument('--method', type=str, choices=['5_fold', 'leave_one_day_out'],
                         default="5_fold", help='Select "5_fold", or "leave_one_day_out" method')
-    parser.add_argument('--mode', type=str, choices=['single', 'fusion'], default='fusion',
-                        help='Select "single", or "fusion" mode')
     parser.add_argument('--dataset_rgb', type=str, default='',
                         required=False,
                         help='Path to RGB dataset')
@@ -45,7 +43,7 @@ def get_args():
     parser.add_argument('--preprocessed_dataset', type=str, default="./data/preprocessed",
                         required=False,
                         help='Dataset 2 you are using.')
-    parser.add_argument('--resize', type=int, default=100,
+    parser.add_argument('--resize', type=int, default=128, choices=[128, 160, 192, 224],
                         help='Height of cropped input image to network')
     parser.add_argument('--num_epochs', type=int, default=20,
                         help='Number of epochs to train')
@@ -146,13 +144,13 @@ def fusion_training(dataset_1, dataset_2, fold: int, train_index, test_index, bi
     return {'acc': fold_accuracy_1, 'loss': fold_loss_1}, {'acc': fold_accuracy_2, 'loss': fold_loss_2}, svm_accuracy
 
 
-def get_compiled_model(trainable, n_classes, pretrained_dataset, include_top, learning_rate, model_name):
+def get_compiled_model(trainable, n_classes, pretrained_dataset, include_top, learning_rate, model_name, input_shape):
     model = Models(trainable, n_classes, pretrained_dataset, include_top, learning_rate)
 
     if model_name == 'densenet121':
         model.densenet121()
     elif model_name == 'mobilenet':
-        model.mobilenet()
+        model.mobilenet(input_shape)
     elif model_name == 'xception':
         model.xception()
 
@@ -172,20 +170,20 @@ def main():
         if args.dataset_rgb and args.dataset_corf:
             dataset, labels, labels_list, filenames = load_images(args.dataset_rgb, args.resize)
             datasets.append(dataset)
-            dataset, labels, labels_list = load_corf_arrays(args.dataset_corf)
+            dataset, labels, labels_list, filenames = load_corf_arrays(args.dataset_corf, args.resize)
             datasets.append(dataset)
             binarizelabels = binarize_labels(labels)
-            model_name = 'RGB'
+            model_name = 'RGB_full'
         elif args.dataset_rgb:
             dataset, labels, labels_list, filenames = load_images(args.dataset_rgb, args.resize)
             datasets.append(dataset)
             binarizelabels = binarize_labels(labels)
-            model_name = 'RGB'
+            model_name = 'RGB_full'
         elif args.dataset_corf:
-            dataset, labels, labels_list = load_corf_arrays(args.dataset_corf)
+            dataset, labels, labels_list, filenames = load_corf_arrays(args.dataset_corf, args.resize)
             datasets.append(dataset)
             binarizelabels = binarize_labels(labels)
-            model_name = 'CORF'
+            model_name = 'CORF_full'
         else:
             raise ValueError('A dataset_rgb or dataset_corf argument is required.')
 
@@ -195,7 +193,6 @@ def main():
     if args.method == '5_fold':
         train_index, test_index = five_cross_validation(datasets[0], binarizelabels)
     else:  # method == 'leave-one-out'
-        # TODO: Refactor leave_one_day_out to leave_one_phone_out
         train_index, test_index = leave_one_day_out(labels, datasets[0], binarizelabels)
 
     pred_correct_path = os.path.join(os.path.dirname(__file__), "pred_correct")
@@ -205,11 +202,13 @@ def main():
     if not os.path.exists(pred_incorrect_path):
         os.mkdir(pred_incorrect_path)
 
-    if args.mode == 'single':
+    input_shape = (args.resize, args.resize, 3)
+
+    if bool(args.dataset_rgb) ^ bool(args.dataset_corf):
         for fold in range(len(train_index)):
             print(f'[INFO] Starting fold {fold+1}/{len(train_index)}')
             compiled_model = get_compiled_model(args.trainable, len(labels_list), args.pretrained_dataset,
-                                                args.include_top, args.learning_rate, args.model)
+                                                args.include_top, args.learning_rate, args.model, input_shape)
             packed_tuple = single_training(datasets[0], fold, train_index, test_index, binarizelabels, compiled_model,
                                            args.batch_size, args.num_epochs, args.model, model_name)
             fold_accuracy, fold_loss, pred_correct, pred_false = packed_tuple

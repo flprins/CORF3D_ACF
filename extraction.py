@@ -1,5 +1,7 @@
 import argparse
+import json
 import os
+import pathlib
 import sys
 
 import cv2
@@ -15,25 +17,34 @@ def get_args():
                         help="Path to directory containing all images (no subdirectories)")
     parser.add_argument("output_directory", type=str,
                         help="Path to directory to save all extraction images")
+    parser.add_argument("-r", "--resize", type=int, help="Size of output crop")
     return parser.parse_args()
 
 
-def morph_close(image):
+def wait_for_imshow_close():
+    """
+    Wait on key press to close all windows
+    """
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+
+def morph_close(image, kernel_size=20):
     """
     Apply morphological closing to fill areas
     """
 
-    kernel_close = np.ones((20, 20), np.uint8)
+    kernel_close = np.ones((kernel_size, kernel_size), np.uint8)
     image_closed = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel_close)
     return image_closed
 
 
-def morph_open(image):
+def morph_open(image, kernel_size=75):
     """
     Apply morphological opening to remove limbs
     """
 
-    kernel_open = np.ones((75, 75), np.uint8)
+    kernel_open = np.ones((kernel_size, kernel_size), np.uint8)
     image_opened = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel_open)
     return image_opened
 
@@ -60,7 +71,7 @@ def crop_image_to_bbox(image, bbox):
 
 def rotate_image(mat: np.ndarray, angle: float):
     """
-    Rotates an image (angle in degrees) and expands image to avoid cropping
+    Rotates an image (degrees in degrees) and expands image to avoid cropping
     https://stackoverflow.com/a/37347070
     """
 
@@ -143,6 +154,14 @@ def get_center_square(img: np.ndarray, margin=0.1):
     return img[crop_y0:crop_y0+crop_width, crop_x0:crop_x0+crop_width]
 
 
+def get_bottom_square(img: np.ndarray, margin=0.1):
+    height, width = img.shape[:2]
+    crop_width = int((1-2*margin)*min(height, width))
+    crop_x_slice = slice(int(margin*width), int(margin*width)+crop_width)
+    crop_y_slice = slice(height-crop_width-int(margin*crop_width), height-int(margin*crop_width))
+    return img[crop_y_slice, crop_x_slice]
+
+
 def draw_label(img, text, pos=(2, 2)):
     """
     https://stackoverflow.com/questions/54607447/opencv-how-to-overlay-text-on-video
@@ -176,67 +195,6 @@ def fit_to_screen(image, max_height=1080, max_width=1920):
         return cv2.resize(image, dim)
     else:
         return image
-
-
-def plot_preprocessing(image_path: str):
-    # Read and resize the image
-    img = cv2.imread(image_path)
-    img = cv2.resize(img, (0, 0), fx=0.2, fy=0.2)
-
-    # Apply thresholding on the green channel
-    img_green = img[:, :, 1]
-    # old threshold value: 127
-    img_thresh = cv2.threshold(img_green, 105, 255, cv2.THRESH_BINARY_INV)[1]
-
-    # Close zeroed holes from thresholding
-    img_closed = morph_close(img_thresh)
-
-    # Get image of biggest region by area
-    biggest_region = get_biggest_region(img_closed)
-    bbox_closed = biggest_region.bbox
-    img_region = biggest_region.image.astype(np.uint8)*255
-
-    img_gray_full = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img_gray2bbox = crop_image_to_bbox(img_gray_full, bbox_closed)
-    img_region_gray = cv2.bitwise_and(img_gray2bbox, img_gray2bbox, mask=img_region)
-
-    rotation = 360 - np.degrees(biggest_region.orientation)
-    img_rotated = rotate_image(img_region_gray, rotation)
-
-    biggest_region = get_biggest_region(rotate_image(img_region, rotation))
-    bbox_rotated = biggest_region.bbox
-    img_rotated_cropped = biggest_region.image.astype(np.uint8)*255
-
-    # Fix frog position
-    print('rotated_cropped', img_rotated_cropped.shape)
-    img_region = fix_orientation(img_rotated_cropped)
-    print('img_region', img_region.shape)
-
-    img_opened = morph_open(img_region)
-    biggest_region = get_biggest_region(img_opened)
-    bbox_opened = biggest_region.bbox
-    img_region_opened = biggest_region.image.astype(np.uint8)*255
-
-    img_gray2bbox = crop_image_to_bbox(crop_image_to_bbox(crop_image_to_bbox(img_gray_full, bbox_closed), bbox_rotated),
-                                       bbox_opened)
-
-    print(img_region_opened.shape)
-    print(img_gray2bbox.shape)
-
-    img_gray_region = cv2.bitwise_and(img_gray2bbox, img_gray2bbox, mask=img_region_opened)
-
-    img_eq = exposure.equalize_hist(img_gray_region)
-    # cv2.imshow('eq', img_eq)
-
-    # rotation = 360 - np.degrees(biggest_region.orientation)
-    # img_rotated = rotate_image(img_gray_region, rotation)
-
-    # Wait on key press to close all windows
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
-
-    merged_image = get_one_image([img_gray_full, img_closed, img_opened, img_rotated])
-    return merged_image
 
 
 def symmetry_score(image: np.ndarray):
@@ -318,7 +276,12 @@ def get_opened_region(image: np.ndarray, threshold: int, show_images=False):
     return biggest_region, bbox_closed, rotation, bbox_rotated, needs_flipping
 
 
-def extract_square(image_path: str, min_threshold=80, max_threshold=80, min_symmetry=.9):
+def plot_image_histogram(image: np.ndarray):
+    plt.hist(image.ravel(), 256, [0, 256])
+    plt.show()
+
+
+def extract_square_symimage_path(image_path: str, min_threshold=80, max_threshold=80, min_symmetry=.9):
     print(image_path)
     # Read and resize the image
     img = cv2.imread(image_path)
@@ -327,25 +290,9 @@ def extract_square(image_path: str, min_threshold=80, max_threshold=80, min_symm
 
     # Extract green channel
     img_green = img[:, :, 1]
-    # cv2.imshow('img_region', img_green)
-    # plt.hist(img_green.ravel(), 256, [0, 256])
-    # plt.show()
-
-    # img_thresh = np.ones(img_green.shape)
-    # img_thresh[img_green < 25] = 0
-    # img_thresh[img_green > 75] = 0
-    # img_thresh[img_thresh > 0] = 255
-    #
-    # img_closed = morph_close(img_thresh)
-    # cv2.imshow('closed', img_closed)
-    #
-    # # Wait on key press to close all windows
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
 
     threshold_scores = []
-    # for th in range(min_threshold, max_threshold, 5):  # old threshold value: 127
-    for th in [min_threshold]:
+    for th in range(min_threshold, max_threshold, 5):  # old threshold value: 127
         try:
             biggest_region, bbox_closed, rotation, bbox_rotated, needs_flipping = get_opened_region(img_green, th,
                                                                                                     False)
@@ -377,8 +324,6 @@ def extract_square(image_path: str, min_threshold=80, max_threshold=80, min_symm
         img_gray_fixed = img_gray_rotated_cropped
     img_gray_region_opened = crop_image_to_bbox(img_gray_fixed, bbox_opened)
 
-    # img_eq = exposure.equalize_hist(img_gray_region_opened)
-
     img_gray_mask = cv2.bitwise_and(img_gray_region_opened, img_gray_region_opened, mask=img_region_opened)
 
     height, width = img_gray_mask.shape[:2]
@@ -389,49 +334,75 @@ def extract_square(image_path: str, min_threshold=80, max_threshold=80, min_symm
     img_gray_100p = cv2.resize(img_gray_mask_square, (100, 100))
     img_eq_100p = exposure.equalize_hist(img_gray_100p)
 
-    # merged_image = get_one_image([img_gray, img_closed, img_rotated, img_opened])
-    # cv2.imshow('extraction_process', merged_image)
-    # cv2.imshow('test', img_eq_100p)
-
-    # Wait on key press to close all windows
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
-
-    # Debugging
-    # print("Best threshold:", th)
-    # img_contrast = apply_contrast(img_green, 60)
-    # img_thresh = apply_threshold_range(img_contrast, 80, 20)
-    #
-    # # Close zeroed holes from thresholding
-    # img_closed = morph_close(img_thresh)
-    #
-    # # Get image of biggest region by area
-    # biggest_region = get_biggest_region(img_closed)
-    # img_region = biggest_region.image.astype(np.uint8)*255
-    #
-    # return get_one_image([img_thresh, img_region])
-
     if np.max(img_eq_100p) <= 1:
         return (img_eq_100p*255).astype(np.uint8)
     else:
         return img_eq_100p.astype(np.uint8)
 
 
-def main():
-    # TODO: Centre crop
-    # TODO: Give error when more than ~100 zero-valued pixels
-    # TODO: See if providing head/tail coords helps significantly
+def extract_square(image_path: str, threshold=80, edge_length=100):
+    print(image_path)
+    # Read and resize the image
+    img = cv2.imread(image_path)
+    height_full, width_full = img.shape[:2]
+    img_small = cv2.resize(img, (0, 0), fx=0.2, fy=0.2)
+    height_small, width_small = img_small.shape[:2]
+    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
+    # Extract green channel
+    img_green = img_small[:, :, 1]
+
+    biggest_region, bbox_closed, rotation, bbox_rotated, needs_flipping = get_opened_region(img_green, threshold,
+                                                                                            False)
+    bbox_opened = biggest_region.bbox
+    img_region_opened = biggest_region.image.astype(np.uint8)*255
+
+    bbox_closed_full = np.multiply(bbox_closed, height_full/height_small).astype(int)
+    bbox_rotated_full = np.multiply(bbox_rotated, bbox_closed_full[3]/bbox_closed[3]).astype(int)
+    bbox_opened_full = np.multiply(bbox_opened, bbox_rotated_full[3]/bbox_rotated[3]).astype(int)
+
+    img_gray_region = crop_image_to_bbox(img_gray, bbox_closed_full)
+    img_gray_rotated = rotate_image(img_gray_region, rotation)
+    img_gray_rotated_cropped = crop_image_to_bbox(img_gray_rotated, bbox_rotated_full)
+    if needs_flipping:
+        img_gray_fixed = cv2.flip(img_gray_rotated_cropped, -1)
+    else:
+        img_gray_fixed = img_gray_rotated_cropped
+    img_gray_region_opened = crop_image_to_bbox(img_gray_fixed, bbox_opened_full)
+    full_size = (img_gray_region_opened.shape[1], img_gray_region_opened.shape[0])
+    img_region_opened_full = cv2.resize(img_region_opened, full_size, 0, 0, interpolation=cv2.INTER_NEAREST)
+
+    img_gray_mask = cv2.bitwise_and(img_gray_region_opened, img_gray_region_opened, mask=img_region_opened_full)
+    img_gray_mask_square = get_center_square(img_gray_mask, margin=.2)
+    # if img_gray_mask_square.shape[0] < edge_length:
+    #     print(f"Warning: Crop is being upscaled from {img_gray_mask_square.shape[0]} to {edge_length}")
+
+    n_zero = np.count_nonzero(img_gray_mask_square == 0)
+    if n_zero/img_gray_mask_square.size > 0.1:
+        # cv2.imshow('square', img_gray_resized)
+        # wait_for_imshow_close()
+        raise ValueError(f"The extracted crop has too many zero elements ({n_zero/img_gray_mask_square.size*100:.2f}%)")
+    img_eq = exposure.equalize_hist(img_gray_mask_square)
+
+    # If image uses [0,1] floats, convert to [0,255] ints
+    if np.max(img_eq) <= 1:
+        return (img_eq*255).astype(np.uint8)
+    else:
+        return img_eq.astype(np.uint8)
+
+
+def main():
     args = get_args()
 
-    if not os.path.exists(args.output_directory):
-        os.mkdir(args.output_directory)
+    pathlib.Path(args.output_directory).mkdir(parents=True, exist_ok=True)
 
     failed_extractions = []
+    n_images = 0
 
     for image in os.listdir(args.input_directory):
         # TODO: support more image formats by converting to cv2-supported formats
         if os.path.splitext(image)[1].lower() in [".jpg", ".jpeg", ".png"]:
+            n_images += 1
             full_path = os.path.join(args.input_directory, image)
             try:
                 extraction_image = extract_square(full_path)
@@ -441,18 +412,19 @@ def main():
             else:
                 cv2.imwrite(os.path.join(args.output_directory, os.path.splitext(image)[0] + ".png"), extraction_image)
 
+    print(f"{len(failed_extractions)} missing out of {n_images}.")
     with open(os.path.join(args.output_directory, "missing.txt"), 'w') as f:
         f.write("\n".join(failed_extractions))
 
 
 def write_progress_images():
-    out_directory = "pred_incorrect_steps"
+    out_directory = "pred_incorrect_steps_221121"
     in_directory = "data/Tripod"
     if not os.path.exists(out_directory):
         os.mkdir(out_directory)
     for file in os.listdir(in_directory):
-        file = "220728_frog1_tank1_DT_MiMix2_trip.jpg"
-        print(os.path.join(in_directory, file))
+        if not file.startswith("221121"):
+            continue
         img = cv2.imread(os.path.join(in_directory, file))
         img = cv2.resize(img, (0, 0), fx=0.2, fy=0.2)
         img_green = img[:, :, 1]
@@ -482,27 +454,133 @@ def write_progress_images():
         img_gray_mask_square = img_gray_mask[crop_y_slice, crop_x_slice]
         img_gray_100p = cv2.resize(img_gray_mask_square, (100, 100))
 
-        print(np.min(img_gray_100p))
-
-        cv2.imshow('gray_100p', img_gray_100p)
+        # cv2.imshow('gray_100p', img_gray_100p)
 
         img_eq_100p = exposure.equalize_hist(img_gray_100p)
-        vals = img_gray_100p.flatten()
-        b, bins, patches = plt.hist(vals, 10)
-        plt.xlim([0, 255])
-        plt.show()
+        # vals = img_gray_100p.flatten()
+        # b, bins, patches = plt.hist(vals, 10)
+        # plt.xlim([0, 255])
+        # plt.show()
 
         # Wait on key press to close all windows
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
         if np.max(img_eq_100p) <= 1:
             img_eq_100p = (img_eq_100p*255).astype(np.uint8)
         else:
             img_eq_100p = img_eq_100p.astype(np.uint8)
         one_image = fit_to_screen(get_one_image([img, img_thresh, img_gray_mask, img_eq_100p]))
-        break
-        # cv2.imwrite(os.path.join(out_directory, os.path.splitext(file)[0] + ".png"), one_image)
+        cv2.imwrite(os.path.join(out_directory, os.path.splitext(file)[0] + ".png"), one_image)
+
+
+def angle_between_points(p1, p2):
+    d1 = p2[0] - p1[0]
+    d2 = p2[1] - p1[1]
+    if d1 == 0:
+        if d2 == 0:  # same points?
+            deg = 0
+        else:
+            deg = 0 if p1[1] > p2[1] else 180
+    elif d2 == 0:
+        deg = 90 if p1[0] < p2[0] else 270
+    else:
+        deg = np.arctan(d2 / d1) / np.pi * 180
+        lowering = p1[1] < p2[1]
+        if (lowering and deg < 0) or (not lowering and deg > 0):
+            deg += 270
+        else:
+            deg += 90
+    return deg
+
+
+def calc_coords_after_rotation(point, image_size, image_rot_size, degrees):
+    img_height, img_width = image_size
+    img_rot_height, img_rot_width = image_rot_size
+    point_from_centre = np.array([point[0] - img_width/2, point[1] - img_height/2]) + .5
+    theta = np.radians(degrees)
+    c, s = np.cos(theta), np.sin(theta)
+    R = np.array(((c, -s), (s, c)))
+    point_rot_from_centre = R.dot(point_from_centre)
+    point_rot_x = point_rot_from_centre[0] + img_width/2 + (img_rot_width-img_width)/2
+    point_rot_y = point_rot_from_centre[1] + img_height/2 + (img_rot_height-img_height)/2
+    point_rot = np.array([point_rot_x, point_rot_y], dtype=np.int)
+    return point_rot
+
+
+def angle_from_line(p0, p1):
+    angle = np.degrees(np.arctan2(np.abs(p0[1]-p1[1]), np.abs(p1[0]-p0[0])))
+    if p1[0] > p0[0]:  # right
+        if p1[1] < p0[1]:  # top-right
+            angle = 90.0 - angle
+        else:  # bottom-right
+            angle += 90.0
+    elif p1[1] > p0[1]:  # bottom-left
+        angle = 270.0 - angle
+    else:  # bottom-right
+        angle += 270.0
+    angle %= 360.0
+    return angle
+
+
+def extract_from_line(image_path, head_xy, tail_xy, ignore_orientation=True):
+    angle = angle_from_line(tail_xy, head_xy)
+    cv2_flags = cv2.IMREAD_COLOR
+    if ignore_orientation:
+        cv2_flags |= cv2.IMREAD_IGNORE_ORIENTATION
+    img = cv2.imread(image_path, cv2_flags)
+    img_gray = rotate_image(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), angle)
+
+    # Extract green channel
+    img_green = rotate_image(img[:, :, 1], angle)
+
+    head_rot_xy = calc_coords_after_rotation(head_xy, img.shape[:2], img_green.shape[:2], -angle)
+    tail_rot_xy = calc_coords_after_rotation(tail_xy, img.shape[:2], img_green.shape[:2], -angle)
+
+    frog_length = tail_rot_xy[1]-head_rot_xy[1]
+    edge_length = int(round(frog_length*0.35))
+    crop_y = int((head_rot_xy[1]+tail_rot_xy[1])/2 - .5*edge_length)
+    crop_x = head_rot_xy[0] - edge_length//2
+    img_crop = img_gray[crop_y:crop_y+edge_length, crop_x:crop_x+edge_length]
+
+    img_eq = exposure.equalize_hist(img_crop)
+    if np.max(img_eq) <= 1:
+        return (img_eq*255).astype(np.uint8)
+    else:
+        return img_eq.astype(np.uint8)
+
+
+def extraction_from_line():
+    args = get_args()
+
+    pathlib.Path(args.output_directory).mkdir(parents=True, exist_ok=True)
+
+    n_images = 0
+    failed_extractions = []
+
+    with open('head_tail_coords/coords.json', 'r') as f:
+        photos = json.load(f)
+
+    for photo in photos:
+        print(photo['name'])
+        full_path = os.path.join(args.input_directory, photo['name'])
+        head_xy = [photo['x'][0], photo['y'][0]]
+        tail_xy = [photo['x'][1], photo['y'][1]]
+        n_images += 1
+        try:
+            extraction_image = extract_from_line(full_path, head_xy, tail_xy)
+            if args.resize:
+                extraction_image = cv2.resize(extraction_image, (args.resize, args.resize))
+        except (ValueError, cv2.error) as e:
+            print(f'Encountered an exception during extraction of \"{full_path}\":\n{e}', file=sys.stderr)
+            failed_extractions.append(full_path)
+        else:
+            cv2.imwrite(os.path.join(args.output_directory, os.path.splitext(photo['name'])[0] + ".png"),
+                        extraction_image)
+
+    print(f"{len(failed_extractions)} missing out of {n_images}.")
+    with open(os.path.join(args.output_directory, "missing.txt"), 'w') as f:
+        f.write("\n".join(failed_extractions))
 
 
 def extraction_test():
@@ -533,5 +611,29 @@ def extraction_test():
     cv2.destroyAllWindows()
 
 
+def extraction_test2():
+    dir_images = os.path.join(".", "data", "Tripod")
+    for image_file in os.listdir(dir_images):
+        if os.path.splitext(image_file)[1].lower() not in [".jpg", ".jpeg", ".png"]:
+            continue
+        img = cv2.imread(os.path.join(dir_images, image_file))
+        img_green = img[:, :, 1]
+        img_blue = img[:, :, 0]
+        img_green[img_blue > img_green] = 0
+        img_thresh = apply_threshold_range(img_green, 80, 5)
+
+        img_closed = morph_close(img_thresh, 100)
+        biggest_region = get_biggest_region(img_closed)
+        bbox_closed = biggest_region.bbox
+        img_region = biggest_region.image.astype(np.uint8)*255
+
+        img_opened = morph_open(img_region, 500)
+        biggest_region = get_biggest_region(img_opened)
+        bbox_opened = biggest_region.bbox
+        img_region = biggest_region.image.astype(np.uint8)*255
+        cv2.imshow(image_file, fit_to_screen(img_region))
+        wait_for_imshow_close()
+
+
 if __name__ == '__main__':
-    write_progress_images()
+    extraction_from_line()
