@@ -51,12 +51,14 @@ def train_model(model, X_train, y_train, batch_size, num_epochs, X_test, y_test,
     filepath = os.path.join(model_path, f'{model_name}_{counter}_{feature_map}_model.h5')
     earlyStopping = EarlyStopping(monitor='val_categorical_accuracy', patience=7, verbose=2,
                                   mode='auto')
-    checkpoint = ModelCheckpoint(filepath, save_best_only=True, monitor='val_categorical_accuracy',
-                                 mode='auto')
+    checkpoint = ModelCheckpoint(filepath, save_weights_only=True, save_best_only=True,
+                                 monitor='val_categorical_accuracy', mode='auto')
     callbacks_list = [earlyStopping, checkpoint]
 
     hist = model.fit(X_train, y_train, batch_size=batch_size, epochs=num_epochs,
                      verbose=2, validation_data=(X_test, y_test), callbacks=callbacks_list)
+
+    model.load_weights(checkpoint)
 
     y_pred = model.predict(X_test)
 

@@ -19,19 +19,24 @@ def load_images(dataset, resize):
     labels_list = []  # All unique labels
     filenames = []
 
+    print("Reading images...")
     for file in os.listdir(dataset):
         if os.path.splitext(file)[1] != ".png":
             continue
         full_path = os.path.join(dataset, file)
+        filename_elements = file.split('_')
+        label = f'{filename_elements[1]}_{filename_elements[2]}'  # frogX_tankX
+        if label[-1] not in ["1", "2"]:
+            continue
         img = cv2.imread(full_path, 3)
         img = cv2.resize(img, (resize, resize))
         images.append(img)
-        filename_elements = file.split('_')
-        label = f'{filename_elements[1]}_{filename_elements[2]}'  # frogX_tankX
         if label not in labels_list:
             labels_list.append(label)
         labels.append(label)
         filenames.append(file)
+
+    print("Done reading images.")
 
     return np.array(images), labels, labels_list, filenames
 

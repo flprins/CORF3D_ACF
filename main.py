@@ -82,7 +82,11 @@ def single_training(dataset, fold: int, train_index, test_index, binarizelabels,
         if y_test[i].argmax(0) == y_pred[i].argmax(0):
             pred_correct.append(test_index[fold][i])
         else:
-            pred_false.append(test_index[fold][i])
+            top_3_classes = np.argsort(y_pred)[-1:3:-1]
+            top_3_values = np.take(y_pred, top_3_classes)
+            pred_false.append({'true': test_index[fold][i],
+                               'pred_top_3_classes': top_3_classes,
+                               'pred_top_3_values': top_3_values})
 
     plot_data_graph(hist, num_epochs, fold + 1, model_name, feature_map)
     return accuracy * 100, loss, pred_correct, pred_false
@@ -204,7 +208,7 @@ def main():
 
     input_shape = (args.resize, args.resize, 3)
 
-    if bool(args.dataset_rgb) ^ bool(args.dataset_corf):
+    if len(datasets) == 1:
         for fold in range(len(train_index)):
             print(f'[INFO] Starting fold {fold+1}/{len(train_index)}')
             compiled_model = get_compiled_model(args.trainable, len(labels_list), args.pretrained_dataset,
@@ -213,12 +217,16 @@ def main():
                                            args.batch_size, args.num_epochs, args.model, model_name)
             fold_accuracy, fold_loss, pred_correct, pred_false = packed_tuple
 
-            for i in pred_correct:
-                shutil.copy2(os.path.join(os.path.dirname(__file__), "data", "Tripod", filenames[i][:-3] + "jpg"),
-                             pred_correct_path)
-            for i in pred_false:
-                shutil.copy2(os.path.join(os.path.dirname(__file__), "data", "Tripod", filenames[i][:-3] + "jpg"),
-                             pred_incorrect_path)
+            # for i in pred_correct:
+            #     shutil.copy2(os.path.join(os.path.dirname(__file__), "data", "Tripod", filenames[i][:-3] + "jpg"),
+            #                  pred_correct_path)
+            for pred_y in pred_false:
+                filename_true = filenames[np.argmax(pred_y['true'])]
+                predictions = '\n'.join([f' {filenames[np.argmax(pred_y["top_3_classes"][x])]}'
+                                         f' {pred_y["top_3_values"][x]}' for x in range(3)])
+                print(f'Top three predictions for "{filename_true}":\n{predictions}')
+                # shutil.copy2(os.path.join(os.path.dirname(__file__), "data", "Tripod", filenames[i][:-3] + "jpg"),
+                #              pred_incorrect_path)
 
             all_fold_accuracy.append(fold_accuracy)
             all_fold_loss.append(fold_loss)
