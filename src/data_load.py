@@ -26,8 +26,6 @@ def load_images(dataset, resize):
         full_path = os.path.join(dataset, file)
         filename_elements = file.split('_')
         label = f'{filename_elements[1]}_{filename_elements[2]}'  # frogX_tankX
-        if label[-1] not in ["1", "2"]:
-            continue
         img = cv2.imread(full_path, 3)
         img = cv2.resize(img, (resize, resize))
         images.append(img)
