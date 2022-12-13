@@ -14,5 +14,3 @@ module load cuDNN/7.6.4.38-gcccuda-2019b
 source /data/$USER/.envs/acf/bin/activate
 
 python3 ./main.py --model densenet121 --method 5_fold --dataset_rgb '~/data/extractions/line-centre-gray/' --resize 224
- 
-deactivate
