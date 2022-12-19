@@ -1,6 +1,6 @@
 import os.path
 
-from tensorflow.python.keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 from sklearn.model_selection import StratifiedShuffleSplit, LeaveOneGroupOut, StratifiedKFold
 import numpy as np
 import pandas as pd
