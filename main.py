@@ -1,9 +1,8 @@
 import argparse
 import os
-import shutil
 
-from keras.models import *
-from keras.engine import Model
+from tensorflow.python.keras.models import *
+from tensorflow.python.keras import Model
 from sklearn import svm
 from sklearn import metrics
 import numpy as np
