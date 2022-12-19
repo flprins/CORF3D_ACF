@@ -1,7 +1,7 @@
 import argparse
 import os
 
-from tensorflow.python.keras.models import *
+from tensorflow.python.keras.models import load_model
 from tensorflow.python.keras import Model
 from sklearn import svm
 from sklearn import metrics
