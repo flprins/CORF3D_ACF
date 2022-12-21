@@ -1,8 +1,8 @@
 import argparse
 import os
 
-from keras.models import load_model
-from keras import Model
+from tensorflow.python.keras.models import load_model
+from tensorflow.python.keras import Model
 from sklearn import svm
 from sklearn import metrics
 import numpy as np

@@ -1,9 +1,9 @@
-from keras.optimizers import Adam
-from keras.layers import *
-from keras import Model
-from keras.applications.densenet import DenseNet121
-from keras.applications.mobilenet import MobileNet
-from keras.applications.xception import Xception
+from tensorflow.python.keras.optimizers import Adam
+from tensorflow.python.keras.layers import Dense
+from tensorflow.python.keras import Model
+from tensorflow.python.keras.applications.densenet import DenseNet121
+from tensorflow.python.keras.applications.mobilenet import MobileNet
+from tensorflow.python.keras.applications.xception import Xception
 
 
 class Models(object):
@@ -99,7 +99,7 @@ class Models(object):
             beta1: float = 0.9,
             beta2: float = 0.999,
             epsilon: float = 1e-20,
-				    decay: float = 0.0000001,
+            decay: float = 0.0000001,
             amsgrad = False
     ):
         """
