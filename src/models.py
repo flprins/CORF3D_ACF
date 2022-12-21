@@ -1,9 +1,9 @@
-from tensorflow.python.keras.optimizers import Adam
-from tensorflow.python.keras.layers import Dense
-from tensorflow.python.keras import Model
-from tensorflow.python.keras.applications.densenet import DenseNet121
-from tensorflow.python.keras.applications.mobilenet import MobileNet
-from tensorflow.python.keras.applications.xception import Xception
+from keras.optimizers import Adam
+from keras.layers import Dense
+from keras import Model
+from keras.applications.densenet import DenseNet121
+from keras.applications.mobilenet import MobileNet
+from keras.applications.xception import Xception
 
 
 class Models(object):
