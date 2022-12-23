@@ -1,11 +1,11 @@
 import os
 
-import matlab.engine
+# import matlab.engine
 import numpy as np
 import cv2
 from sklearn import preprocessing
 
-m = matlab.engine.start_matlab()
+# m = matlab.engine.start_matlab()
 
 
 def corf_feature_map(image_path, sigma, beta, inhibition_factor, highthresh):
