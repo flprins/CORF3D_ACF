@@ -28,7 +28,8 @@ def main():
         print(f'Calculating CORF feature maps for inhibition factor {inhibition_factor}...')
         corf_feature_set = corf_feature_maps(args.input_directory, 2.2, 4, inhibition_factor, 0.005)
         corf_feature_set_norm = feature_normalization(corf_feature_set)
-        np.savez_compressed(os.path.join(args.output_directory, f'corf_{inhibition_factor}'), corf_feature_set_norm)
+        np.savez_compressed(os.path.join(args.output_directory, f'corf_{inhibition_factor}'),
+                            data=corf_feature_set_norm)
 
     labels = [x for x in os.listdir(args.input_directory) if os.path.splitext(x)[1] in [".jpg", ".jpeg", ".png"]]
     np.savez_compressed(os.path.join(args.output_directory, "labels"), np.asarray(labels))

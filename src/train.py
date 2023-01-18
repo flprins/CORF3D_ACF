@@ -58,7 +58,7 @@ def train_model(model, X_train, y_train, batch_size, num_epochs, X_test, y_test,
     hist = model.fit(X_train, y_train, batch_size=batch_size, epochs=num_epochs,
                      verbose=2, validation_data=(X_test, y_test), callbacks=callbacks_list)
 
-    model.load_weights(checkpoint)
+    model.load_weights(filepath)
 
     y_pred = model.predict(X_test)
 

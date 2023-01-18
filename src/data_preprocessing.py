@@ -29,7 +29,6 @@ def batch_data_preprocessing(dataset_1, dataset_2, dataset_3, feature_map):
     labels = []
     labels_list = []
 
-
     data_dir_list = os.listdir(dataset_1)
     for folder_name in data_dir_list:
         img_list = os.listdir(dataset_1 + '/' + folder_name)

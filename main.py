@@ -1,5 +1,6 @@
 import argparse
 import os
+import pathlib
 
 from keras.models import load_model
 from keras import Model
@@ -76,16 +77,17 @@ def single_training(dataset, fold: int, train_index, test_index, binarizelabels,
 
     pred_correct = []
     pred_false = []
-    # TODO: Give scores (top 3)
     for i in range(len(y_test)):
         if y_test[i].argmax(0) == y_pred[i].argmax(0):
             pred_correct.append(test_index[fold][i])
         else:
-            top_3_classes = np.argsort(y_pred)[-1:3:-1]
-            top_3_values = np.take(y_pred, top_3_classes)
-            pred_false.append({'true': test_index[fold][i],
-                               'pred_top_3_classes': top_3_classes,
-                               'pred_top_3_values': top_3_values})
+            top_indices = np.argsort(y_pred[i])[-1:-4:-1]  # Get indices of top 3 predictions
+            top_one_hot = np.zeros((len(top_indices), len(y_pred)), dtype=int)
+            top_one_hot[np.arange(len(top_indices)), top_indices] = 1
+            top_values = np.take(y_pred[i], top_indices)
+            pred_false.append({'true_idx': test_index[fold][i],
+                               'top_predictions': top_one_hot,
+                               'top_values': top_values})
 
     plot_data_graph(hist, num_epochs, fold + 1, model_name, feature_map)
     return accuracy * 100, loss, pred_correct, pred_false
@@ -164,6 +166,7 @@ def get_compiled_model(trainable, n_classes, pretrained_dataset, include_top, le
 
 def main():
     args = get_args()
+    pathlib.Path(os.path.join(".", "plots")).mkdir(exist_ok=True)
 
     datasets = []
 
@@ -175,17 +178,17 @@ def main():
             datasets.append(dataset)
             dataset, labels, labels_list, filenames = load_corf_arrays(args.dataset_corf, args.resize)
             datasets.append(dataset)
-            binarizelabels = binarize_labels(labels)
+            binarizelabels, label_binarizer = binarize_labels(labels)
             model_name = 'RGB_full'
         elif args.dataset_rgb:
             dataset, labels, labels_list, filenames = load_images(args.dataset_rgb, args.resize)
             datasets.append(dataset)
-            binarizelabels = binarize_labels(labels)
+            binarizelabels, label_binarizer = binarize_labels(labels)
             model_name = 'RGB_full'
         elif args.dataset_corf:
             dataset, labels, labels_list, filenames = load_corf_arrays(args.dataset_corf, args.resize)
             datasets.append(dataset)
-            binarizelabels = binarize_labels(labels)
+            binarizelabels, label_binarizer = binarize_labels(labels)
             model_name = 'CORF_full'
         else:
             raise ValueError('A dataset_rgb or dataset_corf argument is required.')
@@ -198,8 +201,8 @@ def main():
     else:  # method == 'leave-one-out'
         train_index, test_index = leave_one_day_out(labels, datasets[0], binarizelabels)
 
-    pred_correct_path = os.path.join(os.path.dirname(__file__), "pred_correct")
-    pred_incorrect_path = os.path.join(os.path.dirname(__file__), "pred_incorrect")
+    pred_correct_path = os.path.join(os.path.dirname(__file__), 'pred_correct')
+    pred_incorrect_path = os.path.join(os.path.dirname(__file__), 'pred_incorrect')
     if not os.path.exists(pred_correct_path):
         os.mkdir(pred_correct_path)
     if not os.path.exists(pred_incorrect_path):
@@ -220,10 +223,12 @@ def main():
             #     shutil.copy2(os.path.join(os.path.dirname(__file__), "data", "Tripod", filenames[i][:-3] + "jpg"),
             #                  pred_correct_path)
             for pred_y in pred_false:
-                filename_true = filenames[np.argmax(pred_y['true'])]
-                predictions = '\n'.join([f' {filenames[np.argmax(pred_y["top_3_classes"][x])]}'
-                                         f' {pred_y["top_3_values"][x]}' for x in range(3)])
-                print(f'Top three predictions for "{filename_true}":\n{predictions}')
+                true_filename = filenames(pred_y['true_idx'])
+                pred_labels = label_binarizer.inverse_transform(pred_y['top_predictions'])
+                predictions = '\n'.join([f' {pred_labels[x]}'
+                                         f' {pred_y["top_values"][x]}'
+                                         for x in range(len(pred_y['top_predictions']))])
+                print(f'Top three predictions for "{true_filename}":\n{predictions}')
                 # shutil.copy2(os.path.join(os.path.dirname(__file__), "data", "Tripod", filenames[i][:-3] + "jpg"),
                 #              pred_incorrect_path)
 

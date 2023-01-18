@@ -4,6 +4,13 @@ import cv2
 import numpy as np
 from sklearn import preprocessing
 
+from src.feature_maps import feature_stack
+
+
+def filename2label(filename: str):
+    filename_elements = filename.split('_')
+    return f'{filename_elements[1]}_{filename_elements[2]}'  # frogX_tankX
+
 
 def load_images(dataset, resize):
     """
@@ -24,11 +31,11 @@ def load_images(dataset, resize):
         if os.path.splitext(file)[1] != ".png":
             continue
         full_path = os.path.join(dataset, file)
-        filename_elements = file.split('_')
-        label = f'{filename_elements[1]}_{filename_elements[2]}'  # frogX_tankX
         img = cv2.imread(full_path, 3)
         img = cv2.resize(img, (resize, resize))
         images.append(img)
+
+        label = filename2label(file)
         if label not in labels_list:
             labels_list.append(label)
         labels.append(label)
@@ -44,35 +51,26 @@ def load_corf_arrays(dataset, resize):
     Function to return an list of CORF arrays and its labels
 
     :param resize: resize the image
-    :param dataset: Folder with class name and all the images in the dataset
+    :param dataset: Folder containing CORF datasets and labels as .npz
     :return: Lists of image in an array form
     """
 
-    labels = []
-    corf_arrays = []
-    labels_list = []  # All unique labels
-    filenames = []
+    corf_0 = np.load(os.path.join(dataset, "corf_0.0.npz"))['arr_0']
+    corf_1 = np.load(os.path.join(dataset, "corf_1.8.npz"))['arr_0']
+    corf_2 = np.load(os.path.join(dataset, "corf_3.6.npz"))['arr_0']
 
-    corf_dict = np.load(dataset)
-    for filename, data in corf_dict.items():
-        if data.dtype == "uint8":
-            img = cv2.cvtColor(data, cv2.COLOR_GRAY2RGB)
-        else:
-            img = cv2.cvtColor((data*255).astype(np.uint8), cv2.COLOR_GRAY2RGB)
-        img = cv2.resize(img, (resize, resize))
-        # img = np.zeros([*data.shape, 3])
-        # img[:, :, 0] = data*255.0
-        # img[:, :, 1] = data*255.0
-        # img[:, :, 2] = data*255.0
-        corf_arrays.append(img)
-        filename_elements = filename.split('_')
-        label = f'{filename_elements[1]}_{filename_elements[2]}'  # frogX_tankX
+    corf_stack = feature_stack(corf_0, corf_1, corf_2)
+
+    labels = []
+    labels_list = []
+    filenames = np.load(os.path.join(dataset, "labels.npz"))['arr_0']
+    for filename in filenames:
+        label = filename2label(filename)
         if label not in labels_list:
             labels_list.append(label)
         labels.append(label)
-        filenames.append(filename)
 
-    return np.array(corf_arrays), labels, labels_list, filenames
+    return corf_stack, labels, labels_list, filenames
 
 
 def load_feature_maps(dataset, resize):
@@ -106,7 +104,7 @@ def load_feature_maps(dataset, resize):
 
 def binarize_labels(labels):
     """
-    Function to return an list of binarized labels
+    Function to return a list of binarized labels
 
     :param labels: List of labels
     :return: Lists of binarized labels
@@ -116,4 +114,4 @@ def binarize_labels(labels):
     lb = preprocessing.LabelBinarizer().fit(flattened_list)
     labels = lb.transform(flattened_list)
 
-    return labels
+    return labels, lb
