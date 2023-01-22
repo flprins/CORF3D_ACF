@@ -95,18 +95,18 @@ def single_training(dataset, fold: int, train_index, test_index, binarizelabels,
 
 def fusion_training(dataset_1, dataset_2, fold: int, train_index, test_index, binarizelabels, batch_size, num_epochs,
                     model_name, feature_map_1, feature_map_2, trainable, n_classes, pretrained_dataset, include_top,
-                    learning_rate):
+                    learning_rate, input_shape):
     """
     Plots data graphs and returns accuracies and losses for two models,
     as well as SVM accuracy for a fusion model
     """
-    compiled_model = get_compiled_model(trainable, n_classes, pretrained_dataset, include_top, learning_rate,
-                                        model_name)
+    compiled_model = get_compiled_model(trainable, n_classes, pretrained_dataset,
+                                        include_top, learning_rate, model_name, input_shape)
     fold_accuracy_1, fold_loss_1, pred_correct, pred_false = single_training(dataset_1, fold, train_index, test_index,
                                                                              binarizelabels, compiled_model, batch_size,
                                                                              num_epochs, model_name, feature_map_1)
-    compiled_model = get_compiled_model(trainable, n_classes, pretrained_dataset, include_top, learning_rate,
-                                        model_name)
+    compiled_model = get_compiled_model(trainable, n_classes, pretrained_dataset,
+                                        include_top, learning_rate, model_name, input_shape)
     fold_accuracy_2, fold_loss_2, pred_correct, pred_false = single_training(dataset_2, fold, train_index, test_index,
                                                                              binarizelabels, compiled_model, batch_size,
                                                                              num_epochs, model_name, feature_map_2)
@@ -123,10 +123,8 @@ def fusion_training(dataset_1, dataset_2, fold: int, train_index, test_index, bi
     trained_model_2 = load_model(filepath_2)
 
     # Extract features
-    model_1_feature_map = Model(trained_model_1.input,
-                                trained_model_1.layers[-2].output)
-    model_2_feature_map = Model(trained_model_2.input,
-                                trained_model_2.layers[-2].output)
+    model_1_feature_map = Model(trained_model_1.input, trained_model_1.layers[-2].output)
+    model_2_feature_map = Model(trained_model_2.input, trained_model_2.layers[-2].output)
 
     features_train_1 = model_1_feature_map.predict(dataset_1[train_index[fold]])
     features_test_1 = model_1_feature_map.predict(dataset_1[test_index[fold]])
@@ -248,7 +246,7 @@ def main():
                                                                  args.num_epochs, args.model, args.feature_map_1,
                                                                  args.feature_map_2, args.trainable, len(labels_list),
                                                                  args.pretrained_dataset, args.include_top,
-                                                                 args.learning_rate)
+                                                                 args.learning_rate, input_shape)
 
             all_fold_accuracy.append(results_1['acc'])
             all_fold_loss.append(results_1['loss'])
